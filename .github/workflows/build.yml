@@ -7,10 +7,20 @@ on:
       - master
     tags:
       - 'v*'
+    paths-ignore:
+      - 'README.md'
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
   pull_request:
     branches:
       - main
       - master
+    paths-ignore:
+      - 'README.md'
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
   workflow_dispatch:
 
 concurrency:
@@ -36,8 +46,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | sdkmanager --licenses || true
 
       - name: Setup Gradle & Cache
         uses: gradle/actions/setup-gradle@v4
