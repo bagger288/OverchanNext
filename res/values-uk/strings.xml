@@ -463,7 +463,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <string name="pref_cat_subscriptions">Відстеження відповідей</string>
     <string name="pref_cat_cache">Кеш</string>
     <string name="pref_cat_update">Перевірка оновлень</string>
-    <string name="pref_cat_about">Про Overchan</string>
+    <string name="pref_cat_about">Про OverchanX</string>
     <string name="pref_cat_proxy">З’єднання</string>
     <string name="pref_use_proxy">Проксі</string>
     <string name="pref_use_proxy_summary">Використовувати HTTP-проксі</string>
@@ -604,7 +604,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <string name="pref_update_on_startup_summary">Але не частіше ніж один раз на день</string>
     <string name="pref_update_allow_beta_title">Дозволити тестові версії</string>
     <string name="pref_update_allow_beta_summary">Дозволити установку тестових версій</string>
-    <string name="pref_about_version_title">Overchan Android</string>
+    <string name="pref_about_version_title">OverchanX Android</string>
     <string name="pref_about_license_title">Ліцензія</string>
     <string name="pref_about_license_summary">GPLv3</string>
     <string name="pref_download_dir_title">Тека звантажень</string>
