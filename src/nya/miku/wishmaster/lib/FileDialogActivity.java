@@ -22,6 +22,7 @@ import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -170,7 +171,14 @@ public class FileDialogActivity extends ListActivity {
         canSelectDir = getIntent().getBooleanExtra(CAN_SELECT_DIR, false);
 
         if (selectionMode == SELECTION_MODE_OPEN) {
-            newButton.setEnabled(false);
+            newButton.setEnabled(true);
+            newButton.setText(R.string.filedialog_browse_system);
+            newButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openSystemPicker();
+                }
+            });
         }
 
         layoutSelect = (LinearLayout) findViewById(R.id.filedialog_LinearLayoutSelect);
@@ -207,6 +215,39 @@ public class FileDialogActivity extends ListActivity {
             selectButton.setEnabled(true);
         }
         getDir(startPath);
+    }
+
+    private void openSystemPicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        if (formatFilter != null && formatFilter.length > 0) {
+            boolean hasJson = false;
+            for (String f : formatFilter) {
+                if (f != null && f.toLowerCase(Locale.US).contains("json")) {
+                    hasJson = true;
+                    break;
+                }
+            }
+            if (hasJson) {
+                intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] { "application/json", "text/*", "*/*" });
+            }
+        }
+        try {
+            startActivityForResult(intent, 9999);
+        } catch (Exception e) {
+            // fallback
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK && data != null) {
+            setResult(RESULT_OK, data);
+            finish();
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void getDir(String dirPath) {

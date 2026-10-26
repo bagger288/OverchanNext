@@ -21,11 +21,14 @@ package nya.miku.wishmaster.ui.settings;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -59,7 +62,7 @@ public class SettingsImporter {
      * @param activity
      */
     public static void Import(final String json, final boolean overwrite, final Activity activity) {
-        Import(null, json, overwrite, activity);
+        Import(null, json, null, overwrite, activity);
     }
 
     /**
@@ -70,16 +73,28 @@ public class SettingsImporter {
      * @param activity
      */
     public static void Import(final File filename, final boolean overwrite, final Activity activity) {
-        Import(filename, null, overwrite, activity);
+        Import(filename, null, null, overwrite, activity);
+    }
+
+    /**
+     * Импортирует настройки из Uri (системный проводник)
+     *
+     * @param uri       Uri из которого нужно импортировать настройки
+     * @param overwrite перезапись настроек, если true
+     * @param activity
+     */
+    public static void Import(final Uri uri, final boolean overwrite, final Activity activity) {
+        Import(null, null, uri, overwrite, activity);
     }
 
     /**
      * @param filename  файл из которого нужно импортировать настройки, может быть null
      * @param json_     настройки в виде строки в формате JSON, может быть null
+     * @param uri       Uri из которого нужно импортировать настройки, может быть null
      * @param overwrite перезапись настроек, если true
      * @param activity
      */
-    private static void Import(final File filename, final String json_, final boolean overwrite, final Activity activity) {
+    private static void Import(final File filename, final String json_, final Uri uri, final boolean overwrite, final Activity activity) {
         final CancellableTask task = new CancellableTask.BaseCancellableTask();
         final ProgressDialog progressDialog = new ProgressDialog(activity);
         final Database database = MainApplication.getInstance().database;
@@ -181,16 +196,28 @@ public class SettingsImporter {
             }
 
             private String loadFromFile(final File filename) throws IOException {
-                FileInputStream inputStream = null;
-                inputStream = new FileInputStream(filename);
-                StringBuffer json_string = new StringBuffer("");
-                byte[] buffer = new byte[1024];
+                FileInputStream inputStream = new FileInputStream(filename);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[4096];
                 int d;
                 while ((d = inputStream.read(buffer)) != -1) {
-                    json_string.append(new String(buffer, 0, d));
+                    bos.write(buffer, 0, d);
                 }
                 inputStream.close();
-                return json_string.toString();
+                return new String(bos.toByteArray(), "UTF-8");
+            }
+
+            private String loadFromUri(final Uri uri, final Activity activity) throws IOException {
+                InputStream inputStream = activity.getContentResolver().openInputStream(uri);
+                if (inputStream == null) throw new IOException("Cannot open URI: " + uri);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                byte[] buffer = new byte[4096];
+                int d;
+                while ((d = inputStream.read(buffer)) != -1) {
+                    bos.write(buffer, 0, d);
+                }
+                inputStream.close();
+                return new String(bos.toByteArray(), "UTF-8");
             }
 
             private void Import() throws Exception {
@@ -198,6 +225,8 @@ public class SettingsImporter {
                 String json_string = null;
                 if (filename != null) {
                     json_string = loadFromFile(filename);
+                } else if (uri != null) {
+                    json_string = loadFromUri(uri, activity);
                 } else if (json_ != null) {
                     json_string = json_;
                 }

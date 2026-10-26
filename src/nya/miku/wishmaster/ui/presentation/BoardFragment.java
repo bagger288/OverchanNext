@@ -106,8 +106,8 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.drawerlayout.widget.DrawerLayout;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.Layout;
@@ -556,54 +556,54 @@ public class BoardFragment extends Fragment implements AdapterView.OnItemClickLi
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         UrlPageModel model;
-        switch (item.getItemId()) {
-            case R.id.menu_add_post:
-                openPostForm(tabModel.hash, presentationModel.source.boardModel, getSendPostModel());
-                return true;
-            case R.id.menu_update:
-                if (tabModel.type == TabModel.TYPE_LOCAL) {
-                    openFromChan();
-                } else {
-                    update();
-                }
-                return true;
-            case R.id.menu_catalog:
-                model = new UrlPageModel();
-                model.chanName = chan.getChanName();
-                model.type = UrlPageModel.TYPE_CATALOGPAGE;
-                model.boardName = tabModel.pageModel.boardName;
-                UrlHandler.open(model, activity);
-                return true;
-            case R.id.menu_search:
-                searchUsingChan = false;
-                initSearchBar();
-                showSearchBar();
-                return true;
-            case R.id.menu_search_threads:
-                searchUsingChan = true;
-                initSearchBar();
-                showSearchBar();
-                return true;
-            case R.id.menu_save_page:
-                saveThisPage();
-                return true;
-            case R.id.menu_board_gallery:
-                openGridGallery();
-                return true;
-            case R.id.menu_quickaccess_add:
-                QuickAccess.Entry newEntry = new QuickAccess.Entry();
-                newEntry.chan = chan;
-                newEntry.boardName = presentationModel.source.boardModel.boardName;
-                newEntry.boardDescription = presentationModel.source.boardModel.boardDescription;
-                List<QuickAccess.Entry> quickaccessList = QuickAccess.getQuickAccessFromPreferences();
-                quickaccessList.add(0, newEntry);
-                QuickAccess.saveQuickAccessToPreferences(quickaccessList);
-                enableQuickAccessMenu = Boolean.FALSE;
-                item.setVisible(false);
-                return true;
-            case R.id.menu_reload_thread:
-                updateFromScratch();
-                return true;
+        int id = item.getItemId();
+        if (id == R.id.menu_add_post) {
+            openPostForm(tabModel.hash, presentationModel.source.boardModel, getSendPostModel());
+            return true;
+        } else if (id == R.id.menu_update) {
+            if (tabModel.type == TabModel.TYPE_LOCAL) {
+                openFromChan();
+            } else {
+                update();
+            }
+            return true;
+        } else if (id == R.id.menu_catalog) {
+            model = new UrlPageModel();
+            model.chanName = chan.getChanName();
+            model.type = UrlPageModel.TYPE_CATALOGPAGE;
+            model.boardName = tabModel.pageModel.boardName;
+            UrlHandler.open(model, activity);
+            return true;
+        } else if (id == R.id.menu_search) {
+            searchUsingChan = false;
+            initSearchBar();
+            showSearchBar();
+            return true;
+        } else if (id == R.id.menu_search_threads) {
+            searchUsingChan = true;
+            initSearchBar();
+            showSearchBar();
+            return true;
+        } else if (id == R.id.menu_save_page) {
+            saveThisPage();
+            return true;
+        } else if (id == R.id.menu_board_gallery) {
+            openGridGallery();
+            return true;
+        } else if (id == R.id.menu_quickaccess_add) {
+            QuickAccess.Entry newEntry = new QuickAccess.Entry();
+            newEntry.chan = chan;
+            newEntry.boardName = presentationModel.source.boardModel.boardName;
+            newEntry.boardDescription = presentationModel.source.boardModel.boardDescription;
+            List<QuickAccess.Entry> quickaccessList = QuickAccess.getQuickAccessFromPreferences();
+            quickaccessList.add(0, newEntry);
+            QuickAccess.saveQuickAccessToPreferences(quickaccessList);
+            enableQuickAccessMenu = Boolean.FALSE;
+            item.setVisible(false);
+            return true;
+        } else if (id == R.id.menu_reload_thread) {
+            updateFromScratch();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -789,39 +789,39 @@ public class BoardFragment extends Fragment implements AdapterView.OnItemClickLi
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         //контекстное меню для превью-аттачментов
-        switch (item.getItemId()) {
-            case R.id.context_menu_thumb_load_thumb:
-                bitmapCache.asyncGet(
-                        ChanModels.hashAttachmentModel((AttachmentModel) lastContextMenuAttachment.getTag()),
-                        ((AttachmentModel) lastContextMenuAttachment.getTag()).thumbnail,
-                        settings.getPostThumbnailSize(),
-                        chan,
-                        null,
-                        imagesDownloadTask,
-                        (ImageView) lastContextMenuAttachment.findViewById(R.id.post_thumbnail_image),
-                        imagesDownloadExecutor,
-                        Async.UI_HANDLER,
-                        true,
-                        R.drawable.thumbnail_error);
-                return true;
-            case R.id.context_menu_thumb_download:
-                downloadFile((AttachmentModel) lastContextMenuAttachment.getTag());
-                return true;
-            case R.id.context_menu_thumb_copy_url:
-                String url = chan.fixRelativeUrl(((AttachmentModel) lastContextMenuAttachment.getTag()).path);
-                Clipboard.copyText(activity, url);
-                Toast.makeText(activity, resources.getString(R.string.notification_url_copied, url), Toast.LENGTH_LONG).show();
-                return true;
-            case R.id.context_menu_thumb_share_link:
-                shareAttachmentUrl((AttachmentModel)lastContextMenuAttachment.getTag());
-                return true;
-            case R.id.context_menu_thumb_attachment_info:
-                String info = Attachments.getAttachmentInfoString(chan, ((AttachmentModel) lastContextMenuAttachment.getTag()), resources);
-                Toast.makeText(activity, info, Toast.LENGTH_LONG).show();
-                return true;
-            case R.id.context_menu_thumb_reverse_search:
-                ReverseImageSearch.openDialog(activity, chan.fixRelativeUrl(((AttachmentModel) lastContextMenuAttachment.getTag()).path));
-                return true;
+        int id = item.getItemId();
+        if (id == R.id.context_menu_thumb_load_thumb) {
+            bitmapCache.asyncGet(
+                    ChanModels.hashAttachmentModel((AttachmentModel) lastContextMenuAttachment.getTag()),
+                    ((AttachmentModel) lastContextMenuAttachment.getTag()).thumbnail,
+                    settings.getPostThumbnailSize(),
+                    chan,
+                    null,
+                    imagesDownloadTask,
+                    (ImageView) lastContextMenuAttachment.findViewById(R.id.post_thumbnail_image),
+                    imagesDownloadExecutor,
+                    Async.UI_HANDLER,
+                    true,
+                    R.drawable.thumbnail_error);
+            return true;
+        } else if (id == R.id.context_menu_thumb_download) {
+            downloadFile((AttachmentModel) lastContextMenuAttachment.getTag());
+            return true;
+        } else if (id == R.id.context_menu_thumb_copy_url) {
+            String url = chan.fixRelativeUrl(((AttachmentModel) lastContextMenuAttachment.getTag()).path);
+            Clipboard.copyText(activity, url);
+            Toast.makeText(activity, resources.getString(R.string.notification_url_copied, url), Toast.LENGTH_LONG).show();
+            return true;
+        } else if (id == R.id.context_menu_thumb_share_link) {
+            shareAttachmentUrl((AttachmentModel)lastContextMenuAttachment.getTag());
+            return true;
+        } else if (id == R.id.context_menu_thumb_attachment_info) {
+            String info = Attachments.getAttachmentInfoString(chan, ((AttachmentModel) lastContextMenuAttachment.getTag()), resources);
+            Toast.makeText(activity, info, Toast.LENGTH_LONG).show();
+            return true;
+        } else if (id == R.id.context_menu_thumb_reverse_search) {
+            ReverseImageSearch.openDialog(activity, chan.fixRelativeUrl(((AttachmentModel) lastContextMenuAttachment.getTag()).path));
+            return true;
         }
         
         //контекстное меню для обычных постов
@@ -831,138 +831,138 @@ public class BoardFragment extends Fragment implements AdapterView.OnItemClickLi
             lastContextMenuPosition = position;
         }
         if (nullAdapterIsSet || position == -1 || adapter.getCount() <= position) return false;
-        switch (item.getItemId()) {
-            case R.id.context_menu_open_in_new_tab:
-                openInNewTab(position);
-                return true;
-            case R.id.context_menu_thread_preview:
-                showThreadPreviewDialog(position);
-                return true;
-            case R.id.context_menu_reply_no_reading:
-                UrlPageModel model = new UrlPageModel();
-                model.chanName = chan.getChanName();
-                model.type = UrlPageModel.TYPE_THREADPAGE;
-                model.boardName = tabModel.pageModel.boardName;
-                model.threadNumber = adapter.getItem(position).sourceModel.parentThread;
-                openPostForm(ChanModels.hashUrlPageModel(model), presentationModel.source.boardModel, getSendPostModel(model));
-                return true;
-            case R.id.context_menu_copy_thread_url:
-                UrlPageModel copyThreadLinkUrlPageModel = new UrlPageModel();
-                copyThreadLinkUrlPageModel.chanName = chan.getChanName();
-                copyThreadLinkUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
-                copyThreadLinkUrlPageModel.boardName = tabModel.pageModel.boardName;
-                copyThreadLinkUrlPageModel.threadNumber = adapter.getItem(position).sourceModel.number;
+        int id2 = item.getItemId();
+        if (id2 == R.id.context_menu_open_in_new_tab) {
+            openInNewTab(position);
+            return true;
+        } else if (id2 == R.id.context_menu_thread_preview) {
+            showThreadPreviewDialog(position);
+            return true;
+        } else if (id2 == R.id.context_menu_reply_no_reading) {
+            UrlPageModel model = new UrlPageModel();
+            model.chanName = chan.getChanName();
+            model.type = UrlPageModel.TYPE_THREADPAGE;
+            model.boardName = tabModel.pageModel.boardName;
+            model.threadNumber = adapter.getItem(position).sourceModel.parentThread;
+            openPostForm(ChanModels.hashUrlPageModel(model), presentationModel.source.boardModel, getSendPostModel(model));
+            return true;
+        } else if (id2 == R.id.context_menu_copy_thread_url) {
+            UrlPageModel copyThreadLinkUrlPageModel = new UrlPageModel();
+            copyThreadLinkUrlPageModel.chanName = chan.getChanName();
+            copyThreadLinkUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
+            copyThreadLinkUrlPageModel.boardName = tabModel.pageModel.boardName;
+            copyThreadLinkUrlPageModel.threadNumber = adapter.getItem(position).sourceModel.number;
 
-                String copyThreadLinkUrl = chan.buildUrl(copyThreadLinkUrlPageModel);
-                Clipboard.copyText(activity, copyThreadLinkUrl);
-                Toast.makeText(activity, resources.getString(R.string.notification_url_copied, copyThreadLinkUrl), Toast.LENGTH_LONG).show();
-                return true;
-            case R.id.context_menu_share_thread_link:
-                UrlPageModel shareThreadLinkUrlPageModel = new UrlPageModel();
-                shareThreadLinkUrlPageModel.chanName = chan.getChanName();
-                shareThreadLinkUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
-                shareThreadLinkUrlPageModel.boardName = tabModel.pageModel.boardName;
-                shareThreadLinkUrlPageModel.threadNumber = adapter.getItem(position).sourceModel.number;
+            String copyThreadLinkUrl = chan.buildUrl(copyThreadLinkUrlPageModel);
+            Clipboard.copyText(activity, copyThreadLinkUrl);
+            Toast.makeText(activity, resources.getString(R.string.notification_url_copied, copyThreadLinkUrl), Toast.LENGTH_LONG).show();
+            return true;
+        } else if (id2 == R.id.context_menu_share_thread_link) {
+            UrlPageModel shareThreadLinkUrlPageModel = new UrlPageModel();
+            shareThreadLinkUrlPageModel.chanName = chan.getChanName();
+            shareThreadLinkUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
+            shareThreadLinkUrlPageModel.boardName = tabModel.pageModel.boardName;
+            shareThreadLinkUrlPageModel.threadNumber = adapter.getItem(position).sourceModel.number;
 
-                String shareThreadLinkUrl = chan.buildUrl(shareThreadLinkUrlPageModel);
-                Intent shareThreadLinkIntent = new Intent(Intent.ACTION_SEND);
-                shareThreadLinkIntent.setType("text/plain");
-                shareThreadLinkIntent.putExtra(Intent.EXTRA_TEXT, shareThreadLinkUrl);
-                startActivity(Intent.createChooser(shareThreadLinkIntent, resources.getString(R.string.share_via)));
-                return true;
-            case R.id.context_menu_hide:
-                adapter.getItem(position).hidden = true;
-                database.addHidden(
-                        tabModel.pageModel.chanName,
-                        tabModel.pageModel.boardName,
-                        pageType == TYPE_POSTSLIST ? tabModel.pageModel.threadNumber : adapter.getItem(position).sourceModel.number,
-                        pageType == TYPE_POSTSLIST ? adapter.getItem(position).sourceModel.number : null);
-                adapter.notifyDataSetChanged();
-                return true;
-            case R.id.context_menu_goto_post:
-                scrollToItem(adapter.getItem(position).sourceModel.number, true);
-                return true;
-            case R.id.context_menu_reply:
-                openReply(position, false, null);
-                return true;
-            case R.id.context_menu_reply_with_quote:
-                openReply(position, true, null);
-                return true;
-            case R.id.context_menu_copy_post_text:
-                Clipboard.copyText(activity, adapter.getItem(position).spannedComment.toString());
-                Toast.makeText(activity, resources.getString(R.string.notification_comment_copied), Toast.LENGTH_LONG).show();
-                return true;
-            case R.id.context_menu_share_post_text:
-                UrlPageModel sharePostUrlPageModel = new UrlPageModel();
-                sharePostUrlPageModel.chanName = chan.getChanName();
-                sharePostUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
-                sharePostUrlPageModel.boardName = tabModel.pageModel.boardName;
-                sharePostUrlPageModel.threadNumber = tabModel.pageModel.threadNumber;
-                sharePostUrlPageModel.postNumber = adapter.getItem(position).sourceModel.number;
-                
-                Intent sharePostIntent = new Intent(Intent.ACTION_SEND);
-                sharePostIntent.setType("text/plain");
-                sharePostIntent.putExtra(Intent.EXTRA_SUBJECT, chan.buildUrl(sharePostUrlPageModel));
-                sharePostIntent.putExtra(Intent.EXTRA_TEXT, adapter.getItem(position).spannedComment.toString());
-                startActivity(Intent.createChooser(sharePostIntent, resources.getString(R.string.share_via)));
-                return true;
-            case R.id.context_menu_copy_post_url:
-                UrlPageModel copyLinkUrlPageModel = new UrlPageModel();
-                copyLinkUrlPageModel.chanName = chan.getChanName();
-                copyLinkUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
-                copyLinkUrlPageModel.boardName = tabModel.pageModel.boardName;
-                copyLinkUrlPageModel.threadNumber = tabModel.pageModel.threadNumber;
-                copyLinkUrlPageModel.postNumber = adapter.getItem(position).sourceModel.number;
+            String shareThreadLinkUrl = chan.buildUrl(shareThreadLinkUrlPageModel);
+            Intent shareThreadLinkIntent = new Intent(Intent.ACTION_SEND);
+            shareThreadLinkIntent.setType("text/plain");
+            shareThreadLinkIntent.putExtra(Intent.EXTRA_TEXT, shareThreadLinkUrl);
+            startActivity(Intent.createChooser(shareThreadLinkIntent, resources.getString(R.string.share_via)));
+            return true;
+        } else if (id2 == R.id.context_menu_hide) {
+            adapter.getItem(position).hidden = true;
+            database.addHidden(
+                    tabModel.pageModel.chanName,
+                    tabModel.pageModel.boardName,
+                    pageType == TYPE_POSTSLIST ? tabModel.pageModel.threadNumber : adapter.getItem(position).sourceModel.number,
+                    pageType == TYPE_POSTSLIST ? adapter.getItem(position).sourceModel.number : null);
+            adapter.notifyDataSetChanged();
+            return true;
+        } else if (id2 == R.id.context_menu_goto_post) {
+            scrollToItem(adapter.getItem(position).sourceModel.number, true);
+            return true;
+        } else if (id2 == R.id.context_menu_reply) {
+            openReply(position, false, null);
+            return true;
+        } else if (id2 == R.id.context_menu_reply_with_quote) {
+            openReply(position, true, null);
+            return true;
+        } else if (id2 == R.id.context_menu_copy_post_text) {
+            Clipboard.copyText(activity, adapter.getItem(position).spannedComment.toString());
+            Toast.makeText(activity, resources.getString(R.string.notification_comment_copied), Toast.LENGTH_LONG).show();
+            return true;
+        } else if (id2 == R.id.context_menu_share_post_text) {
+            UrlPageModel sharePostUrlPageModel = new UrlPageModel();
+            sharePostUrlPageModel.chanName = chan.getChanName();
+            sharePostUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
+            sharePostUrlPageModel.boardName = tabModel.pageModel.boardName;
+            sharePostUrlPageModel.threadNumber = tabModel.pageModel.threadNumber;
+            sharePostUrlPageModel.postNumber = adapter.getItem(position).sourceModel.number;
+            
+            Intent sharePostIntent = new Intent(Intent.ACTION_SEND);
+            sharePostIntent.setType("text/plain");
+            sharePostIntent.putExtra(Intent.EXTRA_SUBJECT, chan.buildUrl(sharePostUrlPageModel));
+            sharePostIntent.putExtra(Intent.EXTRA_TEXT, adapter.getItem(position).spannedComment.toString());
+            startActivity(Intent.createChooser(sharePostIntent, resources.getString(R.string.share_via)));
+            return true;
+        } else if (id2 == R.id.context_menu_copy_post_url) {
+            UrlPageModel copyLinkUrlPageModel = new UrlPageModel();
+            copyLinkUrlPageModel.chanName = chan.getChanName();
+            copyLinkUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
+            copyLinkUrlPageModel.boardName = tabModel.pageModel.boardName;
+            copyLinkUrlPageModel.threadNumber = tabModel.pageModel.threadNumber;
+            copyLinkUrlPageModel.postNumber = adapter.getItem(position).sourceModel.number;
 
-                String copyLinkUrl = chan.buildUrl(copyLinkUrlPageModel);
-                Clipboard.copyText(activity, copyLinkUrl);
-                Toast.makeText(activity, resources.getString(R.string.notification_url_copied, copyLinkUrl), Toast.LENGTH_LONG).show();
-                return true;
-            case R.id.context_menu_share_post_link:
-                UrlPageModel shareLinkUrlPageModel = new UrlPageModel();
-                shareLinkUrlPageModel.chanName = chan.getChanName();
-                shareLinkUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
-                shareLinkUrlPageModel.boardName = tabModel.pageModel.boardName;
-                shareLinkUrlPageModel.threadNumber = tabModel.pageModel.threadNumber;
-                shareLinkUrlPageModel.postNumber = adapter.getItem(position).sourceModel.number;
+            String copyLinkUrl = chan.buildUrl(copyLinkUrlPageModel);
+            Clipboard.copyText(activity, copyLinkUrl);
+            Toast.makeText(activity, resources.getString(R.string.notification_url_copied, copyLinkUrl), Toast.LENGTH_LONG).show();
+            return true;
+        } else if (id2 == R.id.context_menu_share_post_link) {
+            UrlPageModel shareLinkUrlPageModel = new UrlPageModel();
+            shareLinkUrlPageModel.chanName = chan.getChanName();
+            shareLinkUrlPageModel.type = UrlPageModel.TYPE_THREADPAGE;
+            shareLinkUrlPageModel.boardName = tabModel.pageModel.boardName;
+            shareLinkUrlPageModel.threadNumber = tabModel.pageModel.threadNumber;
+            shareLinkUrlPageModel.postNumber = adapter.getItem(position).sourceModel.number;
 
-                String shareLinkUrl = chan.buildUrl(shareLinkUrlPageModel);
-                Intent shareLinkIntent = new Intent(Intent.ACTION_SEND);
-                shareLinkIntent.setType("text/plain");
-                shareLinkIntent.putExtra(Intent.EXTRA_TEXT, shareLinkUrl);
-                startActivity(Intent.createChooser(shareLinkIntent, resources.getString(R.string.share_via)));
-                return true;
-            case R.id.context_menu_delete:
-                DeletePostModel delModel = new DeletePostModel();
-                delModel.chanName = chan.getChanName();
-                delModel.boardName = tabModel.pageModel.boardName;
-                delModel.threadNumber = tabModel.pageModel.threadNumber;
-                delModel.postNumber = adapter.getItem(position).sourceModel.number;
-                runDelete(delModel,
-                        adapter.getItem(position).sourceModel.attachments != null && adapter.getItem(position).sourceModel.attachments.length > 0);
-                return true;
-            case R.id.context_menu_report:
-                DeletePostModel reportModel = new DeletePostModel();
-                reportModel.chanName = chan.getChanName();
-                reportModel.boardName = tabModel.pageModel.boardName;
-                reportModel.threadNumber = tabModel.pageModel.threadNumber;
-                reportModel.postNumber = adapter.getItem(position).sourceModel.number;
-                runReport(reportModel);
-                return true;
-            case R.id.context_menu_subscribe:
-                String chanName = chan.getChanName();
-                String board = tabModel.pageModel.boardName;
-                String thread = tabModel.pageModel.threadNumber;
-                String post = adapter.getItem(position).sourceModel.number;
-                if (subscriptions.hasSubscription(chanName, board, thread, post)) {
-                    subscriptions.removeSubscription(chanName, board, thread, post);
-                    for (int i=position; i<adapter.getCount(); ++i) adapter.getItem(i).onUnsubscribe(post);
-                } else {
-                    subscriptions.addSubscription(chanName, board, thread, post);
-                    for (int i=position; i<adapter.getCount(); ++i) adapter.getItem(i).onSubscribe(post);
-                }
-                adapter.notifyDataSetChanged();
-                return true;
+            String shareLinkUrl = chan.buildUrl(shareLinkUrlPageModel);
+            Intent shareLinkIntent = new Intent(Intent.ACTION_SEND);
+            shareLinkIntent.setType("text/plain");
+            shareLinkIntent.putExtra(Intent.EXTRA_TEXT, shareLinkUrl);
+            startActivity(Intent.createChooser(shareLinkIntent, resources.getString(R.string.share_via)));
+            return true;
+        } else if (id2 == R.id.context_menu_delete) {
+            DeletePostModel delModel = new DeletePostModel();
+            delModel.chanName = chan.getChanName();
+            delModel.boardName = tabModel.pageModel.boardName;
+            delModel.threadNumber = tabModel.pageModel.threadNumber;
+            delModel.postNumber = adapter.getItem(position).sourceModel.number;
+            runDelete(delModel,
+                    adapter.getItem(position).sourceModel.attachments != null && adapter.getItem(position).sourceModel.attachments.length > 0);
+            return true;
+        } else if (id2 == R.id.context_menu_report) {
+            DeletePostModel reportModel = new DeletePostModel();
+            reportModel.chanName = chan.getChanName();
+            reportModel.boardName = tabModel.pageModel.boardName;
+            reportModel.threadNumber = tabModel.pageModel.threadNumber;
+            reportModel.postNumber = adapter.getItem(position).sourceModel.number;
+            runReport(reportModel);
+            return true;
+        } else if (id2 == R.id.context_menu_subscribe) {
+            String chanName = chan.getChanName();
+            String board = tabModel.pageModel.boardName;
+            String thread = tabModel.pageModel.threadNumber;
+            String post = adapter.getItem(position).sourceModel.number;
+            if (subscriptions.hasSubscription(chanName, board, thread, post)) {
+                subscriptions.removeSubscription(chanName, board, thread, post);
+                for (int i=position; i<adapter.getCount(); ++i) adapter.getItem(i).onUnsubscribe(post);
+            } else {
+                subscriptions.addSubscription(chanName, board, thread, post);
+                for (int i=position; i<adapter.getCount(); ++i) adapter.getItem(i).onSubscribe(post);
+            }
+            adapter.notifyDataSetChanged();
+            return true;
         }
         return false;
     }
@@ -2966,17 +2966,15 @@ public class BoardFragment extends Fragment implements AdapterView.OnItemClickLi
                 model.searchRequest = fragmentRef.get().tabModel.pageModel.searchRequest;
             model.chanName = fragmentRef.get().chan.getChanName();
             model.boardName = fragmentRef.get().tabModel.pageModel.boardName;
-            switch (v.getId()) {
-                case R.id.board_navigation_previous:
-                    model.boardPage = fragmentRef.get().tabModel.pageModel.boardPage - 1;
-                    UrlHandler.open(model, fragmentRef.get().activity);
-                    break;
-                case R.id.board_navigation_next:
-                    model.boardPage = fragmentRef.get().tabModel.pageModel.boardPage + 1;
-                    UrlHandler.open(model, fragmentRef.get().activity);
-                    break;
-                case R.id.board_navigation_page:
-                    final EditText inputField = new EditText(fragmentRef.get().activity);
+            int vid = v.getId();
+            if (vid == R.id.board_navigation_previous) {
+                model.boardPage = fragmentRef.get().tabModel.pageModel.boardPage - 1;
+                UrlHandler.open(model, fragmentRef.get().activity);
+            } else if (vid == R.id.board_navigation_next) {
+                model.boardPage = fragmentRef.get().tabModel.pageModel.boardPage + 1;
+                UrlHandler.open(model, fragmentRef.get().activity);
+            } else if (vid == R.id.board_navigation_page) {
+                final EditText inputField = new EditText(fragmentRef.get().activity);
                     String pageNumberHint = fragmentRef.get().resources.getString(R.string.dialog_switch_page_hint) +
                             (fragmentRef.get().presentationModel.source.boardModel.lastPage == BoardModel.LAST_PAGE_UNDEFINED ? "" : " (" +
                                     fragmentRef.get().presentationModel.source.boardModel.firstPage + "-" +
@@ -3009,7 +3007,6 @@ public class BoardFragment extends Fragment implements AdapterView.OnItemClickLi
                             setPositiveButton(R.string.dialog_switch_page_go, dialogOnClickListener).
                             setNegativeButton(android.R.string.cancel, dialogOnClickListener).
                             show();
-                    break;
             }
         }
     }

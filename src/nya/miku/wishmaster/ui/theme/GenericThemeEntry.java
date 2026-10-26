@@ -156,37 +156,37 @@ public class GenericThemeEntry implements Parcelable {
         JSONObject theme = new JSONObject();
         theme.put("baseTheme", themeId == BASE_THEME_DARK ? "dark" : "light");
         for (int i=0, size=customAttrs.size(); i<size; ++i) {
-            switch (customAttrs.keyAt(i)) {
-                case android.R.attr.textColorPrimary: theme.put("textColorPrimary", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.materialPrimary: theme.put("materialPrimary", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.materialPrimaryDark: theme.put("materialPrimaryDark", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.materialNavigationBar: theme.put("materialNavigationBar", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.activityRootBackground: theme.put("activityRootBackground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.sidebarForeground: theme.put("sidebarForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.sidebarBackground: theme.put("sidebarBackground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.sidebarSelectedItem: theme.put("sidebarSelectedItem", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.listSeparatorBackground: theme.put("listSeparatorBackground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postUnreadOverlay: theme.put("postUnreadOverlay", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postBackground: theme.put("postBackground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postForeground: theme.put("postForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postIndexForeground: theme.put("postIndexForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postIndexOverBumpLimit: theme.put("postIndexOverBumpLimit", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postNumberForeground: theme.put("postNumberForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postNameForeground: theme.put("postNameForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postOpForeground: theme.put("postOpForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postSageForeground: theme.put("postSageForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postTripForeground: theme.put("postTripForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postTitleForeground: theme.put("postTitleForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.postQuoteForeground: theme.put("postQuoteForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.spoilerForeground: theme.put("spoilerForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.spoilerBackground: theme.put("spoilerBackground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.urlLinkForeground: theme.put("urlLinkForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.refererForeground: theme.put("refererForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.itemInfoForeground: theme.put("itemInfoForeground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.searchHighlightBackground: theme.put("searchHighlightBackground", colorToString(customAttrs.valueAt(i))); break;
-                case R.attr.subscriptionBackground: theme.put("subscriptionBackground", colorToString(customAttrs.valueAt(i))); break;
-                default: Logger.e("TAG", "unknown attribute: " + customAttrs.keyAt(i));
-            }
+            int key = customAttrs.keyAt(i);
+            int val = customAttrs.valueAt(i);
+            if (key == android.R.attr.textColorPrimary) theme.put("textColorPrimary", colorToString(val));
+            else if (key == R.attr.materialPrimary) theme.put("materialPrimary", colorToString(val));
+            else if (key == R.attr.materialPrimaryDark) theme.put("materialPrimaryDark", colorToString(val));
+            else if (key == R.attr.materialNavigationBar) theme.put("materialNavigationBar", colorToString(val));
+            else if (key == R.attr.activityRootBackground) theme.put("activityRootBackground", colorToString(val));
+            else if (key == R.attr.sidebarForeground) theme.put("sidebarForeground", colorToString(val));
+            else if (key == R.attr.sidebarBackground) theme.put("sidebarBackground", colorToString(val));
+            else if (key == R.attr.sidebarSelectedItem) theme.put("sidebarSelectedItem", colorToString(val));
+            else if (key == R.attr.listSeparatorBackground) theme.put("listSeparatorBackground", colorToString(val));
+            else if (key == R.attr.postUnreadOverlay) theme.put("postUnreadOverlay", colorToString(val));
+            else if (key == R.attr.postBackground) theme.put("postBackground", colorToString(val));
+            else if (key == R.attr.postForeground) theme.put("postForeground", colorToString(val));
+            else if (key == R.attr.postIndexForeground) theme.put("postIndexForeground", colorToString(val));
+            else if (key == R.attr.postIndexOverBumpLimit) theme.put("postIndexOverBumpLimit", colorToString(val));
+            else if (key == R.attr.postNumberForeground) theme.put("postNumberForeground", colorToString(val));
+            else if (key == R.attr.postNameForeground) theme.put("postNameForeground", colorToString(val));
+            else if (key == R.attr.postOpForeground) theme.put("postOpForeground", colorToString(val));
+            else if (key == R.attr.postSageForeground) theme.put("postSageForeground", colorToString(val));
+            else if (key == R.attr.postTripForeground) theme.put("postTripForeground", colorToString(val));
+            else if (key == R.attr.postTitleForeground) theme.put("postTitleForeground", colorToString(val));
+            else if (key == R.attr.postQuoteForeground) theme.put("postQuoteForeground", colorToString(val));
+            else if (key == R.attr.spoilerForeground) theme.put("spoilerForeground", colorToString(val));
+            else if (key == R.attr.spoilerBackground) theme.put("spoilerBackground", colorToString(val));
+            else if (key == R.attr.urlLinkForeground) theme.put("urlLinkForeground", colorToString(val));
+            else if (key == R.attr.refererForeground) theme.put("refererForeground", colorToString(val));
+            else if (key == R.attr.itemInfoForeground) theme.put("itemInfoForeground", colorToString(val));
+            else if (key == R.attr.searchHighlightBackground) theme.put("searchHighlightBackground", colorToString(val));
+            else if (key == R.attr.subscriptionBackground) theme.put("subscriptionBackground", colorToString(val));
+            else Logger.e("TAG", "unknown attribute: " + key);
         }
         return theme.toString();
     }

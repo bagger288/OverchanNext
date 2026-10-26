@@ -43,7 +43,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -171,17 +171,16 @@ public class BoardsListFragment extends Fragment implements AdapterView.OnItemCl
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        switch (id) {
-            case R.id.menu_update:
-                update(true);
-                return true;
-            case R.id.menu_quickaccess_add:
-                QuickAccess.Entry newEntry = new QuickAccess.Entry();
-                newEntry.chan = chan;
-                quickAccessList.add(0, newEntry);
-                QuickAccess.saveQuickAccessToPreferences(quickAccessList);
-                item.setVisible(false);
-                return true;
+        if (id == R.id.menu_update) {
+            update(true);
+            return true;
+        } else if (id == R.id.menu_quickaccess_add) {
+            QuickAccess.Entry newEntry = new QuickAccess.Entry();
+            newEntry.chan = chan;
+            quickAccessList.add(0, newEntry);
+            QuickAccess.saveQuickAccessToPreferences(quickAccessList);
+            item.setVisible(false);
+            return true;
         }
         return super.onContextItemSelected(item);
     }

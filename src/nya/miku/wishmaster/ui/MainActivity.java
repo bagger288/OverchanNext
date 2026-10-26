@@ -61,9 +61,9 @@ import android.content.res.TypedArray;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
 import android.util.TypedValue;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -287,52 +287,50 @@ public class MainActivity extends FragmentActivity {
             return true;
         }
         int id = item.getItemId();
-        switch (id) {
-            case R.id.menu_open_browser:
-                if (tabsAdapter != null && tabsAdapter.getSelectedItem() >= 0 && tabsAdapter.getItem(tabsAdapter.getSelectedItem()).webUrl != null) {
-                    UrlHandler.launchExternalBrowser(this, tabsAdapter.getItem(tabsAdapter.getSelectedItem()).webUrl);
-                }
-                return true;
-            case R.id.menu_favorites:
-                if (tabsAdapter != null && tabsAdapter.getSelectedItem() >= 0 && tabsAdapter.getItem(tabsAdapter.getSelectedItem()).webUrl != null) {
-                    handleFavorite(tabsAdapter.getItem(tabsAdapter.getSelectedItem()));
-                }
-                return true;
-            case R.id.menu_autohide:
-                startActivity(new Intent(this, AutohideActivity.class));
-                return true;
-            case R.id.menu_settings:
-            case R.id.menu_sub_settings_all:
-                Intent preferencesIntent = new Intent(this, PreferencesActivity.class);
-                this.startActivity(preferencesIntent);
-                return true;
-            case R.id.menu_sub_settings_suspend:
-                Toast.makeText(this, R.string.notification_suspend, Toast.LENGTH_LONG).show();
-                if (TabsTrackerService.isRunning()) stopService(new Intent(MainActivity.this, TabsTrackerService.class));
-                finish();
-                return true;
-            case R.id.menu_sub_settings_autoupdate:
-                MainApplication.getInstance().settings.setAutoupdateEnabled(!MainApplication.getInstance().settings.isAutoupdateEnabled());
-                if (TabsTrackerService.isRunning()) stopService(new Intent(this, TabsTrackerService.class));
-                if (MainApplication.getInstance().settings.isAutoupdateEnabled()) {
-                    btnRefresh.setImageResource(ThemeUtils.getThemeResId(getTheme(), R.attr.sidebarBtnRefreshOn));
-                    startService(new Intent(this, TabsTrackerService.class));
-                } else {
-                    btnRefresh.setImageResource(ThemeUtils.getThemeResId(getTheme(), R.attr.sidebarBtnRefreshOff));
-                }
-                return true;
-            case R.id.menu_sub_settings_maskpictures:
-                MainApplication.getInstance().settings.setMaskPictures(!MainApplication.getInstance().settings.maskPictures());
-                MainApplication.getInstance().settings.updateStaticSettings(settings);
-                reloadCurrentBoardFragment();
-                return true;
-            case R.id.menu_open_close_drawer:
-                if (drawerLayout.isDrawerOpen(DRAWER_GRAVITY)) {
-                    closeDrawer();
-                } else {
-                    openDrawer();
-                }
-                return true;
+        if (id == R.id.menu_open_browser) {
+            if (tabsAdapter != null && tabsAdapter.getSelectedItem() >= 0 && tabsAdapter.getItem(tabsAdapter.getSelectedItem()).webUrl != null) {
+                UrlHandler.launchExternalBrowser(this, tabsAdapter.getItem(tabsAdapter.getSelectedItem()).webUrl);
+            }
+            return true;
+        } else if (id == R.id.menu_favorites) {
+            if (tabsAdapter != null && tabsAdapter.getSelectedItem() >= 0 && tabsAdapter.getItem(tabsAdapter.getSelectedItem()).webUrl != null) {
+                handleFavorite(tabsAdapter.getItem(tabsAdapter.getSelectedItem()));
+            }
+            return true;
+        } else if (id == R.id.menu_autohide) {
+            startActivity(new Intent(this, AutohideActivity.class));
+            return true;
+        } else if (id == R.id.menu_settings || id == R.id.menu_sub_settings_all) {
+            Intent preferencesIntent = new Intent(this, PreferencesActivity.class);
+            this.startActivity(preferencesIntent);
+            return true;
+        } else if (id == R.id.menu_sub_settings_suspend) {
+            Toast.makeText(this, R.string.notification_suspend, Toast.LENGTH_LONG).show();
+            if (TabsTrackerService.isRunning()) stopService(new Intent(MainActivity.this, TabsTrackerService.class));
+            finish();
+            return true;
+        } else if (id == R.id.menu_sub_settings_autoupdate) {
+            MainApplication.getInstance().settings.setAutoupdateEnabled(!MainApplication.getInstance().settings.isAutoupdateEnabled());
+            if (TabsTrackerService.isRunning()) stopService(new Intent(this, TabsTrackerService.class));
+            if (MainApplication.getInstance().settings.isAutoupdateEnabled()) {
+                btnRefresh.setImageResource(ThemeUtils.getThemeResId(getTheme(), R.attr.sidebarBtnRefreshOn));
+                startService(new Intent(this, TabsTrackerService.class));
+            } else {
+                btnRefresh.setImageResource(ThemeUtils.getThemeResId(getTheme(), R.attr.sidebarBtnRefreshOff));
+            }
+            return true;
+        } else if (id == R.id.menu_sub_settings_maskpictures) {
+            MainApplication.getInstance().settings.setMaskPictures(!MainApplication.getInstance().settings.maskPictures());
+            MainApplication.getInstance().settings.updateStaticSettings(settings);
+            reloadCurrentBoardFragment();
+            return true;
+        } else if (id == R.id.menu_open_close_drawer) {
+            if (drawerLayout.isDrawerOpen(DRAWER_GRAVITY)) {
+                closeDrawer();
+            } else {
+                openDrawer();
+            }
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -372,38 +370,38 @@ public class MainActivity extends FragmentActivity {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo menuInfo = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        switch (item.getItemId()) {
-            case R.id.context_menu_move:
-                tabsAdapter.setDraggingItem(menuInfo.position);
-                return true;
-            case R.id.context_menu_pin:
-                tabsAdapter.toggleTabIsPinned(menuInfo.position);
-                return true;
-            case R.id.context_menu_copy_url:
-                String url = tabsAdapter.getItem(menuInfo.position).webUrl;
-                if (url != null) {
-                    Clipboard.copyText(this, url);
-                    Toast.makeText(this, getString(R.string.notification_url_copied, url), Toast.LENGTH_LONG).show();
-                }
-                return true;
-            case R.id.context_menu_share_link:
-                url = tabsAdapter.getItem(menuInfo.position).webUrl;
-                if (url != null) {
-                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                    shareIntent.setType("text/plain");
-                    shareIntent.putExtra(Intent.EXTRA_TEXT, url);
-                    startActivity(Intent.createChooser(shareIntent, getString(R.string.share_via)));
-                }
-                return true;
-            case R.id.context_menu_favorites:
-                handleFavorite(tabsAdapter.getItem(menuInfo.position));
-                return true;
-            case R.id.context_menu_autoupdate_background:
-                tabsAdapter.toggleTabAutoupdate(menuInfo.position);
-                return true;
-            case R.id.context_menu_autoupdate_now:
-                startService(new Intent(this, TabsTrackerService.class).putExtra(TabsTrackerService.EXTRA_UPDATE_IMMEDIATELY, true));
-                return true;
+        int id = item.getItemId();
+        if (id == R.id.context_menu_move) {
+            tabsAdapter.setDraggingItem(menuInfo.position);
+            return true;
+        } else if (id == R.id.context_menu_pin) {
+            tabsAdapter.toggleTabIsPinned(menuInfo.position);
+            return true;
+        } else if (id == R.id.context_menu_copy_url) {
+            String url = tabsAdapter.getItem(menuInfo.position).webUrl;
+            if (url != null) {
+                Clipboard.copyText(this, url);
+                Toast.makeText(this, getString(R.string.notification_url_copied, url), Toast.LENGTH_LONG).show();
+            }
+            return true;
+        } else if (id == R.id.context_menu_share_link) {
+            String url = tabsAdapter.getItem(menuInfo.position).webUrl;
+            if (url != null) {
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/plain");
+                shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_via)));
+            }
+            return true;
+        } else if (id == R.id.context_menu_favorites) {
+            handleFavorite(tabsAdapter.getItem(menuInfo.position));
+            return true;
+        } else if (id == R.id.context_menu_autoupdate_background) {
+            tabsAdapter.toggleTabAutoupdate(menuInfo.position);
+            return true;
+        } else if (id == R.id.context_menu_autoupdate_now) {
+            startService(new Intent(this, TabsTrackerService.class).putExtra(TabsTrackerService.EXTRA_UPDATE_IMMEDIATELY, true));
+            return true;
         }
         return false;
     }
@@ -790,16 +788,13 @@ public class MainActivity extends FragmentActivity {
         public HiddenTabsSection(View[] views) {
             for (View view : views) {
                 view.setOnClickListener(this);
-                switch (view.getId()) {
-                    case R.id.sidebar_btn_newtab:
-                        btnNewTab = view;
-                        break;
-                    case R.id.sidebar_btn_favorites:
-                        btnFavorites = view;
-                        break;
-                    case R.id.sidebar_btn_history:
-                        btnHistory = view;
-                        break;
+                int id = view.getId();
+                if (id == R.id.sidebar_btn_newtab) {
+                    btnNewTab = view;
+                } else if (id == R.id.sidebar_btn_favorites) {
+                    btnFavorites = view;
+                } else if (id == R.id.sidebar_btn_history) {
+                    btnHistory = view;
                 }
             }
         }
@@ -814,16 +809,13 @@ public class MainActivity extends FragmentActivity {
         public void onClick(View v) {
             tabsAdapter.setDraggingItem(-1);
             int position = TabModel.POSITION_NEWTAB;
-            switch (v.getId()) {
-                case R.id.sidebar_btn_newtab:
-                    position = TabModel.POSITION_NEWTAB;
-                    break;
-                case R.id.sidebar_btn_favorites:
-                    position = TabModel.POSITION_FAVORITES;
-                    break;
-                case R.id.sidebar_btn_history:
-                    position = TabModel.POSITION_HISTORY;
-                    break;
+            int id = v.getId();
+            if (id == R.id.sidebar_btn_newtab) {
+                position = TabModel.POSITION_NEWTAB;
+            } else if (id == R.id.sidebar_btn_favorites) {
+                position = TabModel.POSITION_FAVORITES;
+            } else if (id == R.id.sidebar_btn_history) {
+                position = TabModel.POSITION_HISTORY;
             }
             tabsAdapter.setDraggingItem(-1);
             boolean needSerialize = tabsAdapter.getSelectedItem() != position;

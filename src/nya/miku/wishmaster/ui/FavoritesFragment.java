@@ -33,9 +33,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -121,14 +121,14 @@ public class FavoritesFragment extends Fragment implements AdapterView.OnItemCli
     public boolean onContextItemSelected(MenuItem item) {
         View v = ((AdapterView.AdapterContextMenuInfo) item.getMenuInfo()).targetView;
         Database.FavoritesEntry entry = (FavoritesEntry) v.getTag();
-        switch (item.getItemId()) {
-            case R.id.context_menu_remove_favorites:
-                MainApplication.getInstance().database.removeFavorite(entry.chan, entry.board, entry.boardPage, entry.thread);
-                for (Pair<ListView,String> p : listViews) ((FavoritesAdapter) p.getLeft().getAdapter()).remove(entry);
-                return true;
-            case R.id.context_menu_open_browser:
-                UrlHandler.launchExternalBrowser(activity, entry.url);
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.context_menu_remove_favorites) {
+            MainApplication.getInstance().database.removeFavorite(entry.chan, entry.board, entry.boardPage, entry.thread);
+            for (Pair<ListView,String> p : listViews) ((FavoritesAdapter) p.getLeft().getAdapter()).remove(entry);
+            return true;
+        } else if (itemId == R.id.context_menu_open_browser) {
+            UrlHandler.launchExternalBrowser(activity, entry.url);
+            return true;
         }
         return false;
     }

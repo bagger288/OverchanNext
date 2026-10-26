@@ -1,17 +1,40 @@
+# AI Studio & Preview environment
+.aistudio/
+metadata.json
+server.py
+public/
+debug.keystore.base64
+debug.keystore
+
+# Built binaries and packages
 *.apk
+*.aab
 *.ap_
 *.dex
 *.class
 *.so
 
+# Gradle & Build outputs
+.gradle/
+build/
 bin/
-obj/
 gen/
-proguard/
-local.properties
+obj/
+out/
+.externalNativeBuild/
 
-.gradle/*
-.idea/*
-.externalNativeBuild/*
-build/*
+# Android Studio & IDEs
+.idea/
 *.iml
+.project
+.classpath
+.cproject
+.settings/
+local.properties
+proguard/
+captures/
+
+# OS & logs
+*.log
+.DS_Store
+Thumbs.db

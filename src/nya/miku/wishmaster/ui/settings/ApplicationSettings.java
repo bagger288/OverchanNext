@@ -220,7 +220,7 @@ public class ApplicationSettings {
         if (theme.equals(resources.getString(R.string.pref_theme_value_tomorrow))) return R.style.Theme_Tomorrow;
         if (theme.equals(resources.getString(R.string.pref_theme_value_mikuba))) return R.style.Theme_Mikuba;
         if (theme.equals(resources.getString(R.string.pref_theme_value_dark_mint))) return R.style.Theme_Dark_Mint;
-        return R.style.Theme_Futaba;
+        return R.style.Theme_Photon;
     }
     
     private int getFontSizeStyle() {
@@ -389,16 +389,67 @@ public class ApplicationSettings {
         return false;
     }
     
+    public static final String VIDEO_PLAYER_EXOPLAYER = "exoplayer";
+    public static final String VIDEO_PLAYER_SYSTEM = "system";
+    public static final String VIDEO_PLAYER_WEBVIEW = "webview";
+
     public boolean useInternalVideoPlayer() {
         return preferences.getBoolean(resources.getString(R.string.pref_key_gallery_videoplayer), true);
     }
     
+    public String getVideoPlayerType() {
+        String defaultType = resources.getString(R.string.pref_gallery_video_player_type_value_default);
+        String val = preferences.getString(resources.getString(R.string.pref_key_gallery_video_player_type), null);
+        if (val != null) {
+            return val;
+        }
+        if (preferences.getBoolean(resources.getString(R.string.pref_key_gallery_webview_videoplayer), false)) {
+            return VIDEO_PLAYER_WEBVIEW;
+        }
+        return defaultType;
+    }
+
+    public boolean useExoPlayer() {
+        return useInternalVideoPlayer() && VIDEO_PLAYER_EXOPLAYER.equals(getVideoPlayerType());
+    }
+
+    public boolean useSystemVideoPlayer() {
+        return useInternalVideoPlayer() && VIDEO_PLAYER_SYSTEM.equals(getVideoPlayerType());
+    }
+
     public boolean useWebViewVideoPlayer() {
-        return useInternalVideoPlayer() && preferences.getBoolean(resources.getString(R.string.pref_key_gallery_webview_videoplayer), false);
+        return useInternalVideoPlayer() && VIDEO_PLAYER_WEBVIEW.equals(getVideoPlayerType());
+    }
+
+    public static final String EXOPLAYER_CONTROLS_GESTURES = "gestures";
+    public static final String EXOPLAYER_CONTROLS_SEEKBAR = "seekbar";
+    public static final String EXOPLAYER_CONTROLS_CONTROLLER = "controller";
+    public static final String EXOPLAYER_CONTROLS_CLASSIC = "classic";
+
+    public String getExoPlayerControlsType() {
+        return preferences.getString(
+                resources.getString(R.string.pref_key_gallery_exoplayer_controls),
+                resources.getString(R.string.pref_gallery_exoplayer_controls_value_default));
+    }
+
+    public boolean isExoControlsGestures() {
+        return EXOPLAYER_CONTROLS_GESTURES.equals(getExoPlayerControlsType());
+    }
+
+    public boolean isExoControlsSeekBar() {
+        return EXOPLAYER_CONTROLS_SEEKBAR.equals(getExoPlayerControlsType());
+    }
+
+    public boolean isExoControlsController() {
+        return EXOPLAYER_CONTROLS_CONTROLLER.equals(getExoPlayerControlsType());
+    }
+
+    public boolean isExoControlsClassic() {
+        return EXOPLAYER_CONTROLS_CLASSIC.equals(getExoPlayerControlsType());
     }
 
     public boolean doNotDownloadVideos() {
-        return preferences.getBoolean(resources.getString(R.string.pref_key_do_not_download_videos), false);
+        return preferences.getBoolean(resources.getString(R.string.pref_key_do_not_download_videos), true);
     }
     
     public boolean useInternalAudioPlayer() {

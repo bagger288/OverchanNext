@@ -233,32 +233,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </style>
     
     <style name="Theme_Burichan" parent="@style/Theme_Light_Base">
-        <item name="materialPrimary">#EEF2FF</item>
-        <item name="materialPrimaryDark">#34345C</item>
-        <item name="android:textColorPrimary">#34345C</item>
-        <item name="activityRootBackground">#EEF2FF</item>
-        <item name="sidebarForeground">#34345C</item>
-        <item name="sidebarBackground">#DDEEF2FF</item>
+        <item name="materialPrimary">#9999BB</item>
+        <item name="materialPrimaryDark">#9999BB</item>
+        <item name="materialNavigationBar">#000000</item>
+        <item name="android:textColorPrimary">#222299</item>
+        <item name="activityRootBackground">#D1CCDD</item>
+        <item name="sidebarForeground">#222299</item>
+        <item name="sidebarBackground">#BFE4E4E4</item>
         <item name="sidebarSelectedItem">@drawable/sidebar_selected_burichan</item>
-        <item name="listSeparatorBackground">#B7C5D9</item>
-        <item name="postUnreadOverlay">#7FFF7F7F</item>
-        <item name="postBackground">#D6DAF0</item>
+        <item name="listSeparatorBackground">#E4E4E4</item>
+        <item name="postUnreadOverlay">#7FB82E00</item>
+        <item name="postBackground">#AAAACC</item>
         <item name="postForeground">#000000</item>
-        <item name="postIndexForeground">#789922</item>
+        <item name="postIndexForeground">#4F7942</item>
         <item name="postIndexOverBumpLimit">#C41E3A</item>
         <item name="postNumberForeground">#000000</item>
-        <item name="postNameForeground">#117743</item>
+        <item name="postNameForeground">#3333CC</item>
         <item name="postOpForeground">#008000</item>
-        <item name="postSageForeground">#993333</item>
+        <item name="postSageForeground">#B20000</item>
         <item name="postTripForeground">#228854</item>
-        <item name="postTitleForeground">#0F0C5D</item>
-        <item name="postQuoteForeground">#789922</item>
-        <item name="spoilerForeground">#FFFFFF</item>
-        <item name="spoilerBackground">#000000</item>
-        <item name="urlLinkForeground">#D00000</item>
-        <item name="itemInfoForeground">#666666</item>
-        <item name="searchHighlightBackground">#FF9632</item>
-        <item name="subscriptionBackground">#9988EE</item>
+        <item name="postTitleForeground">#CC3333</item>
+        <item name="postQuoteForeground">#007777</item>
+        <item name="spoilerForeground">#F5F5F5</item>
+        <item name="spoilerBackground">#888888</item>
+        <item name="urlLinkForeground">#222299</item>
+        <item name="itemInfoForeground">#000000</item>
+        <item name="searchHighlightBackground">#FF6633</item>
+        <item name="subscriptionBackground">#9999BB</item>
     </style>
 
     <style name="Theme_Gurochan" parent="@style/Theme_Light_Base">

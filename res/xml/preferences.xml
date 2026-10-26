@@ -168,15 +168,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
                 android:title="@string/pref_gallery_videoplayer_title"
                 android:summary="@string/pref_gallery_videoplayer_summary" />
             
-            <CheckBoxPreference
-                android:defaultValue="false"
-                android:key="@string/pref_key_gallery_webview_videoplayer"
-                android:title="@string/pref_gallery_webview_videoplayer_title"
-                android:summary="@string/pref_gallery_webview_videoplayer_summary"
+            <ListPreference
+                android:key="@string/pref_key_gallery_video_player_type"
+                android:title="@string/pref_gallery_video_player_type_title"
+                android:dialogTitle="@string/pref_gallery_video_player_type_title"
+                android:entries="@array/pref_gallery_video_player_type_choices"
+                android:entryValues="@array/pref_gallery_video_player_type_values"
+                android:defaultValue="@string/pref_gallery_video_player_type_value_default"
                 android:dependency="@string/pref_key_gallery_videoplayer" />
             
+            <ListPreference
+                android:key="@string/pref_key_gallery_exoplayer_controls"
+                android:title="@string/pref_gallery_exoplayer_controls_title"
+                android:dialogTitle="@string/pref_gallery_exoplayer_controls_title"
+                android:entries="@array/pref_gallery_exoplayer_controls_choices"
+                android:entryValues="@array/pref_gallery_exoplayer_controls_values"
+                android:defaultValue="@string/pref_gallery_exoplayer_controls_value_default" />
+            
             <CheckBoxPreference
-                android:defaultValue="false"
+                android:defaultValue="true"
                 android:key="@string/pref_key_do_not_download_videos"
                 android:title="@string/pref_do_not_download_videos_title"
                 android:summary="@string/pref_do_not_download_videos_summary" />

@@ -21,7 +21,7 @@ package nya.miku.wishmaster.chans.chaosfm;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.support.v4.content.res.ResourcesCompat;
+import androidx.core.content.res.ResourcesCompat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;

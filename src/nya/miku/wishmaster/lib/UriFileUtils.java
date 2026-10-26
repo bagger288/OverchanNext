@@ -23,7 +23,7 @@ import android.provider.BaseColumns;
 import android.provider.OpenableColumns;
 import android.provider.MediaStore;
 import android.provider.MediaStore.MediaColumns;
-import android.support.v4.content.FileProvider;
+import androidx.core.content.FileProvider;
 import nya.miku.wishmaster.common.IOUtils;
 import nya.miku.wishmaster.common.Logger;
 import nya.miku.wishmaster.ui.CompatibilityImpl;

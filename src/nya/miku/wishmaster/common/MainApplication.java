@@ -52,6 +52,7 @@ import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.Application;
+import android.content.Context;
 import android.content.ComponentCallbacks2;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -65,16 +66,8 @@ import android.preference.PreferenceManager;
  *
  */
 
-@ReportsCrashes(
-        mailTo = ACRAConstants.ACRA_EMAIL,
-        mode = org.acra.ReportingInteractionMode.DIALOG,
-        resDialogText = R.string.crash_dialog_text,
-        resDialogIcon = android.R.drawable.ic_dialog_info,
-        resDialogTitle = R.string.crash_dialog_title,
-        resDialogCommentPrompt = R.string.crash_dialog_comment_prompt,
-        resDialogOkToast = R.string.crash_dialog_ok_toast )
-
 public class MainApplication extends Application {
+    private static final String TAG = "MainApplication";
     
     private static final String[] MODULES = new String[] {
             "nya.miku.wishmaster.chans.fourchan.FourchanModule",
@@ -246,17 +239,30 @@ public class MainApplication extends Application {
         Wifi.register(this);
     }
     
-    private String getProcessName_unused() {
-        int myPid = android.os.Process.myPid();
-        for (RunningAppProcessInfo process : ((ActivityManager) getSystemService(ACTIVITY_SERVICE)).getRunningAppProcesses()) {
-            if (myPid == process.pid) return process.processName;
+    public static String getProcessNameCompat(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                return Application.getProcessName();
+            } catch (Throwable ignored) {}
         }
+        try {
+            int myPid = android.os.Process.myPid();
+            ActivityManager am = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
+            if (am != null) {
+                List<RunningAppProcessInfo> processes = am.getRunningAppProcesses();
+                if (processes != null) {
+                    for (RunningAppProcessInfo process : processes) {
+                        if (myPid == process.pid) return process.processName;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
         return null;
     }
     
     private boolean isGalleryProcess() {
         try {
-            return processName.endsWith(":Gallery");
+            return processName != null && processName.endsWith(":Gallery");
         } catch (Exception e) {
             return false;
         }
@@ -265,7 +271,30 @@ public class MainApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        ACRA.init(this);
+        processName = getProcessNameCompat(this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (processName != null && !getPackageName().equals(processName)) {
+                String suffix = processName.contains(":") ? processName.substring(processName.indexOf(":") + 1) : processName;
+                try {
+                    android.webkit.WebView.setDataDirectorySuffix(suffix);
+                } catch (Throwable t) {
+                    Logger.e(TAG, "cannot set WebView data directory suffix", t);
+                }
+            }
+        }
+        try {
+            org.acra.ACRAConfiguration config = new org.acra.ACRAConfiguration();
+            config.setMailTo(ACRAConstants.ACRA_EMAIL);
+            config.setMode(org.acra.ReportingInteractionMode.DIALOG);
+            config.setResDialogText(R.string.crash_dialog_text);
+            config.setResDialogIcon(android.R.drawable.ic_dialog_info);
+            config.setResDialogTitle(R.string.crash_dialog_title);
+            config.setResDialogCommentPrompt(R.string.crash_dialog_comment_prompt);
+            config.setResDialogOkToast(R.string.crash_dialog_ok_toast);
+            ACRA.init(this, config);
+        } catch (Throwable t) {
+            Logger.e(TAG, "cannot init ACRA", t);
+        }
         if (isGalleryProcess()) return;
         initObjects();
         instance = this;

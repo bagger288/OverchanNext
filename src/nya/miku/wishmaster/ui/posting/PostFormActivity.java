@@ -138,68 +138,55 @@ public class PostFormActivity extends Activity implements View.OnClickListener, 
     
     @Override
     public boolean onLongClick(View v) {
-        switch (v.getId()) {
-            case R.id.postform_send_button:
-                if (settings.isSafePosting()) {
-                    send();
-                    return true;
-                }
+        if (v.getId() == R.id.postform_send_button) {
+            if (settings.isSafePosting()) {
+                send();
+                return true;
+            }
         }
         return false;
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.postform_sage_checkbox:
-                emailField.setEnabled(!(sageChkbox.isChecked() && boardModel.ignoreEmailIfSage));
-                break;
-            case R.id.postform_captcha_view:
-                updateCaptcha();
-                break;
-            case R.id.postform_send_button:
-                long currentTime = System.currentTimeMillis();
-                if (!settings.isSafePosting() || (currentTime - lastClickTime < 1000)) {
-                    send();
-                } else {
-                    lastClickTime = currentTime;
+        int vid = v.getId();
+        if (vid == R.id.postform_sage_checkbox) {
+            emailField.setEnabled(!(sageChkbox.isChecked() && boardModel.ignoreEmailIfSage));
+        } else if (vid == R.id.postform_captcha_view) {
+            updateCaptcha();
+        } else if (vid == R.id.postform_send_button) {
+            long currentTime = System.currentTimeMillis();
+            if (!settings.isSafePosting() || (currentTime - lastClickTime < 1000)) {
+                send();
+            } else {
+                lastClickTime = currentTime;
+            }
+        } else if (vid == R.id.postform_mark_bold ||
+                vid == R.id.postform_mark_italic ||
+                vid == R.id.postform_mark_underline ||
+                vid == R.id.postform_mark_strike ||
+                vid == R.id.postform_mark_spoiler ||
+                vid == R.id.postform_mark_quote ||
+                vid == R.id.postform_mark_code) {
+            try {
+                if (vid == R.id.postform_mark_bold) {
+                    PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_BOLD);
+                } else if (vid == R.id.postform_mark_italic) {
+                    PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_ITALIC);
+                } else if (vid == R.id.postform_mark_underline) {
+                    PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_UNDERLINE);
+                } else if (vid == R.id.postform_mark_strike) {
+                    PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_STRIKE);
+                } else if (vid == R.id.postform_mark_spoiler) {
+                    PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_SPOILER);
+                } else if (vid == R.id.postform_mark_quote) {
+                    PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_QUOTE);
+                } else if (vid == R.id.postform_mark_code) {
+                    PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_CODE);
                 }
-                break;
-            case R.id.postform_mark_bold:
-            case R.id.postform_mark_italic:
-            case R.id.postform_mark_underline:
-            case R.id.postform_mark_strike:
-            case R.id.postform_mark_spoiler:
-            case R.id.postform_mark_quote:
-            case R.id.postform_mark_code:
-                try {
-                    switch (v.getId()) {
-                        case R.id.postform_mark_bold:
-                            PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_BOLD);
-                            break;
-                        case R.id.postform_mark_italic:
-                            PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_ITALIC);
-                            break;
-                        case R.id.postform_mark_underline:
-                            PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_UNDERLINE);
-                            break;
-                        case R.id.postform_mark_strike:
-                            PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_STRIKE);
-                            break;
-                        case R.id.postform_mark_spoiler:
-                            PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_SPOILER);
-                            break;
-                        case R.id.postform_mark_quote:
-                            PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_QUOTE);
-                            break;
-                        case R.id.postform_mark_code:
-                            PostFormMarkup.markup(boardModel.markType, commentField, PostFormMarkup.FEATURE_CODE);
-                            break;
-                    }
-                } catch (Exception e) {
-                    Logger.e(TAG, e);
-                }
-                break;
+            } catch (Exception e) {
+                Logger.e(TAG, e);
+            }
         }
     }
     
@@ -302,38 +289,37 @@ public class PostFormActivity extends Activity implements View.OnClickListener, 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         int id = item.getItemId();
-        switch (id) {
-            case R.id.menu_attach_file:
-                if (!canAttachOneMore()) {
-                    Toast.makeText(this, getString(R.string.postform_max_attachments), Toast.LENGTH_LONG).show();
-                    return true;
-                }
-                if (!CompatibilityUtils.hasAccessStorage(this)) return true;
-                Intent selectFile = new Intent(this, FileDialogActivity.class);
-                selectFile.putExtra(FileDialogActivity.CAN_SELECT_DIR, false);
-                selectFile.putExtra(FileDialogActivity.START_PATH, currentPath);
-                selectFile.putExtra(FileDialogActivity.SELECTION_MODE, FileDialogActivity.SELECTION_MODE_OPEN);
-                if (boardModel.attachmentsFormatFilters != null) {
-                    selectFile.putExtra(FileDialogActivity.FORMAT_FILTER, boardModel.attachmentsFormatFilters);
-                }
-                startActivityForResult(selectFile, REQUEST_CODE_ATTACH_FILE);
+        if (id == R.id.menu_attach_file) {
+            if (!canAttachOneMore()) {
+                Toast.makeText(this, getString(R.string.postform_max_attachments), Toast.LENGTH_LONG).show();
                 return true;
-            case R.id.menu_attach_gallery:
-                if (!canAttachOneMore()) {
-                    Toast.makeText(this, getString(R.string.postform_max_attachments), Toast.LENGTH_LONG).show();
-                    return true;
-                }
-                if (!CompatibilityUtils.hasAccessStorage(this)) return true;
-                Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-                i.setType("*/*");
-                i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                i.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {
-                    "image/*",
-                    "video/*",
-                    "audio/*"
-                });
-                startActivityForResult(i, REQUEST_CODE_ATTACH_GALLERY);
+            }
+            if (!CompatibilityUtils.hasAccessStorage(this)) return true;
+            Intent selectFile = new Intent(this, FileDialogActivity.class);
+            selectFile.putExtra(FileDialogActivity.CAN_SELECT_DIR, false);
+            selectFile.putExtra(FileDialogActivity.START_PATH, currentPath);
+            selectFile.putExtra(FileDialogActivity.SELECTION_MODE, FileDialogActivity.SELECTION_MODE_OPEN);
+            if (boardModel.attachmentsFormatFilters != null) {
+                selectFile.putExtra(FileDialogActivity.FORMAT_FILTER, boardModel.attachmentsFormatFilters);
+            }
+            startActivityForResult(selectFile, REQUEST_CODE_ATTACH_FILE);
+            return true;
+        } else if (id == R.id.menu_attach_gallery) {
+            if (!canAttachOneMore()) {
+                Toast.makeText(this, getString(R.string.postform_max_attachments), Toast.LENGTH_LONG).show();
                 return true;
+            }
+            if (!CompatibilityUtils.hasAccessStorage(this)) return true;
+            Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+            i.setType("*/*");
+            i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            i.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {
+                "image/*",
+                "video/*",
+                "audio/*"
+            });
+            startActivityForResult(i, REQUEST_CODE_ATTACH_GALLERY);
+            return true;
         }
         return super.onMenuItemSelected(featureId, item);
     }

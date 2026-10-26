@@ -15,6 +15,8 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.view.View;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import nya.miku.wishmaster.ui.AppearanceUtils;
@@ -88,7 +90,46 @@ public class JSWebView {
                     "</script>" +
                 "</body>" +
             "</html>";
-    
+
+    private static final String VIDEO_TEMPLATE =
+            "<!DOCTYPE html>" +
+            "<html>" +
+            "<head>" +
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">" +
+            "<style>" +
+            "  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }" +
+            "  html, body {" +
+            "    margin: 0;" +
+            "    padding: 0;" +
+            "    width: 100%;" +
+            "    height: 100%;" +
+            "    background-color: #000000;" +
+            "    overflow: hidden;" +
+            "    display: flex;" +
+            "    justify-content: center;" +
+            "    align-items: center;" +
+            "  }" +
+            "  video {" +
+            "    width: 100%;" +
+            "    height: 100%;" +
+            "    max-width: 100%;" +
+            "    max-height: 100%;" +
+            "    object-fit: contain;" +
+            "    outline: none;" +
+            "  }" +
+            "</style>" +
+            "</head>" +
+            "<body>" +
+            "  <video id=\"player\" src=\"{{VIDEO_URL}}\" controls autoplay {{LOOP}} playsinline webkit-playsinline></video>" +
+            "  <script>" +
+            "    var v = document.getElementById('player');" +
+            "    if (v) {" +
+            "      v.play().catch(function(e) { console.log('Autoplay error', e); });" +
+            "    }" +
+            "  </script>" +
+            "</body>" +
+            "</html>";
+
     @SuppressLint("SetJavaScriptEnabled")
     public static void setImage(final WebView webView, final File file) {
         fixWebViewTip(webView.getContext());
@@ -125,6 +166,44 @@ public class JSWebView {
             setup.run();
         } else {
             webView.loadData("<html></html>", "text/html", "utf-8");
+            AppearanceUtils.callWhenLoaded(webView, setup);
+        }
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    public static void setVideo(final WebView webView, final String videoUrl, final boolean loop) {
+        fixWebViewTip(webView.getContext());
+        webView.setBackgroundColor(Color.BLACK);
+        webView.setScrollBarStyle(WebView.SCROLLBARS_INSIDE_OVERLAY);
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        webView.setWebChromeClient(new WebChromeClient());
+
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            settings.setAllowFileAccessFromFileURLs(true);
+            settings.setAllowUniversalAccessFromFileURLs(true);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            settings.setMediaPlaybackRequiresUserGesture(false);
+        }
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+
+        final Runnable setup = new Runnable() {
+            @Override
+            public void run() {
+                String html = VIDEO_TEMPLATE.replace("{{VIDEO_URL}}", videoUrl).replace("{{LOOP}}", loop ? "loop" : "");
+                webView.loadDataWithBaseURL(videoUrl, html, "text/html", "UTF-8", null);
+            }
+        };
+
+        if (webView.getWidth() > 0) {
+            setup.run();
+        } else {
             AppearanceUtils.callWhenLoaded(webView, setup);
         }
     }

@@ -64,6 +64,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <string name="pref_key_gallery_nativegif">PREF_KEY_GALLERY_NATIVEGIF</string>
     <string name="pref_key_gallery_videoplayer">PREF_KEY_GALLERY_VIDEOPLAYER</string>
     <string name="pref_key_gallery_webview_videoplayer">PREF_KEY_GALLERY_WEBVIEW_VIDEOPLAYER</string>
+    <string name="pref_key_gallery_video_player_type">PREF_KEY_GALLERY_VIDEO_PLAYER_TYPE</string>
+    <string name="pref_gallery_video_player_type_value_default">@string/pref_gallery_video_player_type_value_exoplayer</string>
+    <string name="pref_gallery_video_player_type_value_exoplayer">exoplayer</string>
+    <string name="pref_gallery_video_player_type_value_system">system</string>
+    <string name="pref_gallery_video_player_type_value_webview">webview</string>
+    <string-array name="pref_gallery_video_player_type_values" translatable="false">
+        <item>@string/pref_gallery_video_player_type_value_exoplayer</item>
+        <item>@string/pref_gallery_video_player_type_value_system</item>
+        <item>@string/pref_gallery_video_player_type_value_webview</item>
+    </string-array>
+    <string name="pref_key_gallery_exoplayer_controls">PREF_KEY_GALLERY_EXOPLAYER_CONTROLS</string>
+    <string name="pref_gallery_exoplayer_controls_value_default">@string/pref_gallery_exoplayer_controls_value_seekbar</string>
+    <string name="pref_gallery_exoplayer_controls_value_gestures">gestures</string>
+    <string name="pref_gallery_exoplayer_controls_value_seekbar">seekbar</string>
+    <string name="pref_gallery_exoplayer_controls_value_controller">controller</string>
+    <string name="pref_gallery_exoplayer_controls_value_classic">classic</string>
+    <string-array name="pref_gallery_exoplayer_controls_values" translatable="false">
+        <item>@string/pref_gallery_exoplayer_controls_value_gestures</item>
+        <item>@string/pref_gallery_exoplayer_controls_value_seekbar</item>
+        <item>@string/pref_gallery_exoplayer_controls_value_controller</item>
+        <item>@string/pref_gallery_exoplayer_controls_value_classic</item>
+    </string-array>
     <string name="pref_key_do_not_download_videos">PREF_KEY_DO_NOT_DOWNLOAD_VIDEOS</string>
     <string name="pref_key_gallery_audioplayer">PREF_KEY_GALLERY_AUDIOPLAYER</string>
     <string name="pref_key_gallery_info_in_grid">PREF_KEY_GALLERY_INFO_IN_GRID</string>
@@ -111,7 +133,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <item>@string/pref_download_format_value_mhtml</item>
     </string-array>
     <string name="pref_key_theme">PREF_KEY_THEME</string>
-    <string name="pref_theme_value_default">@string/pref_theme_value_futaba</string>
+    <string name="pref_theme_value_default">@string/pref_theme_value_photon</string>
     <string name="pref_theme_value_futaba">PREF_THEME_VALUE_FUTABA</string>
     <string name="pref_theme_value_photon">PREF_THEME_VALUE_PHOTON</string>
     <string name="pref_theme_value_neutron">PREF_THEME_VALUE_NEUTRON</string>

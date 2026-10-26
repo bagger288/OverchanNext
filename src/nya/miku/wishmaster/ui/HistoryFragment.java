@@ -30,7 +30,7 @@ import nya.miku.wishmaster.ui.tabs.UrlHandler;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -151,20 +151,18 @@ public class HistoryFragment extends Fragment implements AdapterView.OnItemClick
         if (listItem instanceof Database.HistoryEntry) {
             Database database = MainApplication.getInstance().database;
             Database.HistoryEntry entry = (Database.HistoryEntry) listItem;
-            switch (item.getItemId()) {
-                case R.id.context_menu_remove_history:
-                    database.removeHistory(entry.chan, entry.board, entry.boardPage, entry.thread);
-                    adapter.remove(entry);
-                    break;
-                case R.id.context_menu_open_browser:
-                    UrlHandler.launchExternalBrowser(activity, entry.url);
-                    break;
-                case R.id.context_menu_favorites_from_fragment:
-                    if (database.isFavorite(entry.chan, entry.board, entry.boardPage, entry.thread)) {
-                        database.removeFavorite(entry.chan, entry.board, entry.boardPage, entry.thread);
-                    } else {
-                        database.addFavorite(entry.chan, entry.board, entry.boardPage, entry.thread, entry.title, entry.url);
-                    }
+            int itemId = item.getItemId();
+            if (itemId == R.id.context_menu_remove_history) {
+                database.removeHistory(entry.chan, entry.board, entry.boardPage, entry.thread);
+                adapter.remove(entry);
+            } else if (itemId == R.id.context_menu_open_browser) {
+                UrlHandler.launchExternalBrowser(activity, entry.url);
+            } else if (itemId == R.id.context_menu_favorites_from_fragment) {
+                if (database.isFavorite(entry.chan, entry.board, entry.boardPage, entry.thread)) {
+                    database.removeFavorite(entry.chan, entry.board, entry.boardPage, entry.thread);
+                } else {
+                    database.addFavorite(entry.chan, entry.board, entry.boardPage, entry.thread, entry.title, entry.url);
+                }
             }
             return true;
         }

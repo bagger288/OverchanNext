@@ -32,14 +32,14 @@ public class MakabaConstants {
     public static final String CHAN_NAME = "2ch.hk";
 
     /** домен по умолчанию */
-    public static final String DEFAULT_DOMAIN = "2ch.hk";
+    public static final String DEFAULT_DOMAIN = "2ch.su";
 
     /** все зеркала харкача*/
     public static final List<String> DOMAINS_LIST = Arrays.asList(
-            "2ch.hk", "2ch.life", "2ch.pm", "2-ch.ru");
+            "2ch.su", "2ch.org", "2ch.life");
 
     /** подсказка в меню настроек */
-    public static final String DOMAINS_HINT = "2ch.hk, 2ch.life";
+    public static final String DOMAINS_HINT = "2ch.org, 2ch.life";
 
     /** доски без шок контента (SFW) */
     public static final List<String> SFW_BOARDS = Arrays.asList(

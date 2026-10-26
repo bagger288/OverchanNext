@@ -1117,9 +1117,15 @@ public class FixedSubsamplingScaleImageView extends View {
                         synchronized (decoderLock) {
                             BitmapFactory.Options options = new BitmapFactory.Options();
                             options.inSampleSize = tile.sampleSize;
-                            options.inPreferredConfig = Config.RGB_565;
+                            options.inPreferredConfig = Config.ARGB_8888;
                             options.inDither = true;
-                            Bitmap bitmap = decoder.decodeRegion(view.fileSRect(tile.sRect), options);
+                            Bitmap bitmap;
+                            try {
+                                bitmap = decoder.decodeRegion(view.fileSRect(tile.sRect), options);
+                            } catch (OutOfMemoryError oom) {
+                                options.inPreferredConfig = Config.RGB_565;
+                                bitmap = decoder.decodeRegion(view.fileSRect(tile.sRect), options);
+                            }
                             int rotation = view.getRequiredRotation();
                             if (rotation != 0) {
                                 Matrix matrix = new Matrix();

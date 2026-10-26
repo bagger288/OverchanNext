@@ -73,9 +73,12 @@ import nya.miku.wishmaster.lib.org_json.JSONObject;
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.cookie.Cookie;
 import cz.msebera.android.httpclient.impl.cookie.BasicClientCookie;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.widget.EditText;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -85,7 +88,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceGroup;
-import android.support.v4.content.res.ResourcesCompat;
+import androidx.core.content.res.ResourcesCompat;
 import android.text.InputType;
 import android.util.Base64;
 
@@ -122,8 +125,13 @@ public class MakabaModule extends CloudflareChanModule {
     
     public MakabaModule(SharedPreferences preferences, Resources resources) {
         super(preferences, resources);
+        String savedDomain = preferences.getString(getSharedKey(PREF_KEY_DOMAIN), DEFAULT_DOMAIN);
+        if (savedDomain == null || savedDomain.isEmpty() || savedDomain.equalsIgnoreCase("2ch.hk")) {
+            savedDomain = DEFAULT_DOMAIN;
+            preferences.edit().putString(getSharedKey(PREF_KEY_DOMAIN), DEFAULT_DOMAIN).commit();
+        }
         updateDomain(
-                preferences.getString(getSharedKey(PREF_KEY_DOMAIN), DEFAULT_DOMAIN),
+                savedDomain,
                 preferences.getBoolean(getSharedKey(PREF_KEY_USE_HTTPS_MAKABA), true));
     }
 
@@ -138,7 +146,7 @@ public class MakabaModule extends CloudflareChanModule {
     
     @Override
     public String getDisplayingName() {
-        return "Два.ч (2ch.hk)";
+        return "Два.ч (2ch.su)";
     }
     
     @Override
@@ -202,7 +210,7 @@ public class MakabaModule extends CloudflareChanModule {
     private void updateDomain(String domain, boolean useHttps) {
         if (domain.endsWith("/")) domain = domain.substring(0, domain.length() - 1);
         if (domain.contains("//")) domain = domain.substring(domain.indexOf("//") + 2);
-        if (domain.equals("")) domain = DEFAULT_DOMAIN;
+        if (domain.equals("") || domain.equalsIgnoreCase("2ch.hk")) domain = DEFAULT_DOMAIN;
         this.domain = domain;
         this.domainUrl = (useHttps ? "https://" : "http://") + domain + "/";
     }
@@ -298,39 +306,78 @@ public class MakabaModule extends CloudflareChanModule {
     
     /** Добавить категорию настроек домена (в т.ч. https) */
     private void addDomainPreferences(PreferenceGroup group) {
-        Context context = group.getContext();
-        Preference.OnPreferenceChangeListener updateDomainListener = new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                if (preference.getKey().equals(getSharedKey(PREF_KEY_DOMAIN))) {
-                    updateDomain((String) newValue, preferences.getBoolean(getSharedKey(PREF_KEY_USE_HTTPS_MAKABA), true));
-                    return true;
-                } else if (preference.getKey().equals(getSharedKey(PREF_KEY_USE_HTTPS_MAKABA))) {
-                    updateDomain(preferences.getString(getSharedKey(PREF_KEY_DOMAIN), DEFAULT_DOMAIN), (boolean)newValue);
-                    return true;
-                }
-                return false;
-            }
-        };
+        final Context context = group.getContext();
         PreferenceCategory domainCat = new PreferenceCategory(context);
         domainCat.setTitle(R.string.makaba_prefs_domain_category);
         group.addPreference(domainCat);
-        EditTextPreference domainPref = new EditTextPreference(context); //поле ввода домена
+        
+        final ListPreference domainPref = new LazyPreferences.ListPreference(context);
         domainPref.setTitle(R.string.pref_domain);
         domainPref.setDialogTitle(R.string.pref_domain);
-        domainPref.setSummary(resources.getString(R.string.pref_domain_summary, DOMAINS_HINT));
         domainPref.setKey(getSharedKey(PREF_KEY_DOMAIN));
-        domainPref.getEditText().setHint(DEFAULT_DOMAIN);
-        domainPref.getEditText().setSingleLine();
-        domainPref.getEditText().setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-        domainPref.setOnPreferenceChangeListener(updateDomainListener);
+        
+        final String[] entries = new String[] {
+            "2ch.su (по умолчанию)",
+            "2ch.org",
+            "2ch.life",
+            "Ввести вручную..."
+        };
+        final String[] entryValues = new String[] {
+            "2ch.su",
+            "2ch.org",
+            "2ch.life",
+            "custom"
+        };
+        domainPref.setEntries(entries);
+        domainPref.setEntryValues(entryValues);
+        domainPref.setDefaultValue(DEFAULT_DOMAIN);
+        domainPref.setSummary(this.domain + "\n" + resources.getString(R.string.pref_domain_summary, DOMAINS_HINT));
+        domainPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                String val = (String) newValue;
+                if ("custom".equals(val)) {
+                    final EditText input = new EditText(context);
+                    input.setSingleLine();
+                    input.setText(MakabaModule.this.domain);
+                    new AlertDialog.Builder(context)
+                        .setTitle(R.string.pref_domain)
+                        .setView(input)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String customVal = input.getText().toString().trim();
+                                if (customVal.isEmpty() || customVal.equalsIgnoreCase("2ch.hk")) customVal = DEFAULT_DOMAIN;
+                                preferences.edit().putString(getSharedKey(PREF_KEY_DOMAIN), customVal).commit();
+                                updateDomain(customVal, preferences.getBoolean(getSharedKey(PREF_KEY_USE_HTTPS_MAKABA), true));
+                                domainPref.setValue(customVal);
+                                domainPref.setSummary(customVal + "\n" + resources.getString(R.string.pref_domain_summary, DOMAINS_HINT));
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show();
+                    return false;
+                } else {
+                    updateDomain(val, preferences.getBoolean(getSharedKey(PREF_KEY_USE_HTTPS_MAKABA), true));
+                    domainPref.setSummary(val + "\n" + resources.getString(R.string.pref_domain_summary, DOMAINS_HINT));
+                    return true;
+                }
+            }
+        });
         domainCat.addPreference(domainPref);
-        CheckBoxPreference httpsPref = new LazyPreferences.CheckBoxPreference(context); //чекбокс "использовать https"
+        
+        CheckBoxPreference httpsPref = new LazyPreferences.CheckBoxPreference(context);
         httpsPref.setTitle(R.string.pref_use_https);
         httpsPref.setSummary(R.string.pref_use_https_summary);
         httpsPref.setKey(getSharedKey(PREF_KEY_USE_HTTPS_MAKABA));
         httpsPref.setDefaultValue(true);
-        httpsPref.setOnPreferenceChangeListener(updateDomainListener);
+        httpsPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                updateDomain(preferences.getString(getSharedKey(PREF_KEY_DOMAIN), DEFAULT_DOMAIN), (boolean) newValue);
+                return true;
+            }
+        });
         domainCat.addPreference(httpsPref);
     }
     

@@ -1,44 +1,72 @@
-## Overchan Android
+<p align="center">
+  <img src="res/drawable-xxhdpi/ic_launcher.png" width="128" height="128" alt="OverchanX Logo">
+</p>
 
-Overchan Android (Meta Imageboard Client) is an application for browsing imageboards.
+<h1 align="center">OverchanX</h1>
 
-[Website](http://miku-nyan.github.io/Overchan-Android/)  
-[Releases](https://github.com/miku-nyan/Overchan-Android/releases)  
-[Google Play](https://play.google.com/store/apps/details?id=nya.miku.overchan) (without imageboards list)  
-[F-Droid](https://f-droid.org/repository/browse/?fdid=nya.miku.wishmaster)  
-[Version for ARC Runtime](https://yadi.sk/d/h_71bJRQjcdNm) (doesn't support [SO_KEEPALIVE](https://code.google.com/p/chromium/issues/detail?id=384940))  
+---
 
-[Supported Imageboards](https://github.com/miku-nyan/Overchan-Android/blob/master/Imageboards.md)  
-[Custom Themes](https://github.com/miku-nyan/Overchan-Themes)
+## Изменения относительно оригинального Overchan
 
-## Building Source Code
+### Сборка и совместимость с современным Android
+- Миграция с Ant и Eclipse ADT на Gradle (Android Gradle Plugin 9.x).
+- Миграция устаревшей библиотеки android-support-v4 на AndroidX (Core, Fragment, DrawerLayout, ViewPager, Collection).
+- Обновлены версии SDK: minSdk повышен до 24 (Android 7.0), compileSdk и targetSdk обновлены до 36.
+- Проект переведён на Java 17. Сгенерирован стандартный Gradle Wrapper (`./gradlew`).
 
-### Dependencies
+### Видеоплеер ExoPlayer
+- В галерею интегрирован современный видеоплеер ExoPlayer (v2.19.1) с аппаратным ускорением и поддержкой форматов WebM и MP4.
+- Добавлен выбор режима управления ExoPlayer в настройках галереи (пункт отображается только при выборе ExoPlayer в качестве плеера):
+  - Компактная полоса перемотки (выбрана по умолчанию) — нижний ползунок SeekBar с отображением текущего и общего времени, перемотка двойным тапом на 5 секунд.
+  - Двойной тап — перемотка тапом по левой/правой части экрана на 5 секунд с экранным индикатором.
+  - Штатная панель ExoPlayer — стандартные наэкранные кнопки управления воспроизведением.
 
-* [JDK 7](http://www.oracle.com/technetwork/java/javase/downloads/index.html) (JRE alone is not sufficient)
-* [Android SDK](https://developer.android.com/sdk/index.html#Other)
-* [Android NDK](https://developer.android.com/tools/sdk/ndk/index.html#Downloads)
-* [Apache Ant](http://ant.apache.org/bindownload.cgi) or [Eclipse with ADT](http://developer.android.com/sdk/installing/installing-adt.html)
+### Масштабирование и жесты (Pinch-to-Zoom) в видеоплеере
+- Реализовано масштабирование видео двумя пальцами (pinch-to-zoom) от 1.0x до 5.0x как во время воспроизведения, так и на паузе.
+- Поддерживается как приближение, так и обратное уменьшение жестом щипка.
+- Реализовано панорамирование (перетаскивание) увеличенного кадра одним пальцем с ограничением смещения по границам видео.
+- Сброс приближения в исходный масштаб двойным тапом.
+- Элементы управления отделены от масштабируемого контейнера: полоса перемотки и штатная панель управления остаются неподвижными на экране при масштабировании видео.
 
-### Using Ant
+### Настройки галереи
+- Опция «Не скачивать видеофайлы» включена по умолчанию — видеофайлы воспроизводятся в потоковом режиме напрямую без предварительного скачивания всего файла в кэш.
 
-Open the source code directory and run (in the command line):
+### Название, иконка и версия
+- Приложение переименовано в OverchanX.
+- Обновлена иконка приложения: стилизованная геральдическая буква «X» в тон оперения и контуров герба вместо оригинальной звезды.
+- Версия установлена в 1.0.0 (versionCode 100), package ID: `nya.overchan.next`.
+- Проверка обновлений переведена на репозиторий `bagger288/OverchanNext`.
 
-`ant -Dsdk.dir=/path/to/android-sdk -Dndk.dir=/path/to/android-ndk debug`
+## Сборка проекта (Building Source Code)
 
-The .apk file (`bin/Overchan-debug.apk`) will be signed with the debug key.
+### Требования
+- JDK 17 или новее.
+- Android SDK (платформа API 36, Build-Tools).
+- Android NDK (при необходимости сборки JNI-компонентов giflib).
 
-*Note for Windows platforms:*  
-NDK path cannot contain any spaces but you can use the short name of the path (example: `C:\Program Files` → `C:\PROGRA~1`). The short directory name can be found using `dir /x` (example: `dir /x c:\`)
+### Сборка через Gradle
+Клонируйте репозиторий и выполните команду в корневой папке проекта:
 
-### Using Eclipse with ADT
+Linux / macOS:
+```bash
+./gradlew assembleDebug
+```
 
-Just import the project into your workspace (File → Import → Android → Existing Android code into workspace → select the folder).
+Windows:
+```cmd
+gradlew.bat assembleDebug
+```
 
-### Android Studio/IntelliJ IDEA/Gradle
+Собранный файл будет находиться по пути:
+`build/outputs/apk/debug/OverchanNext-debug.apk`
 
-You may use Android Studio/IntelliJ IDEA at your own risk. The gradle build script is included.
+### Импорт в Android Studio
+1. Откройте Android Studio.
+2. Выберите **File -> Open...** и укажите папку проекта.
+3. Дождитесь синхронизации Gradle и нажмите **Run** или соберите APK через **Build -> Build Bundle(s) / APK(s) -> Build APK(s)**.
 
-## License
+## Поддерживаемые имиджборды
+Список поддерживаемых бордов: [Imageboards.md](Imageboards.md)
 
-Overchan Android is licensed under the [GPLv3](http://www.gnu.org/licenses/gpl-3.0.txt).
+## Лицензия
+OverchanX распространяется под лицензией [GPLv3](LICENSE.txt).

@@ -46,7 +46,7 @@ import android.content.res.Resources;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -162,30 +162,26 @@ public class NewTabFragment extends Fragment implements AdapterView.OnItemClickL
     
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.newtab_open_address_bar:
-                if (addressBarOpened) {
-                    hideKeyboard(v);
-                    addressBar.setVisibility(View.GONE);
-                    addressBarOpened = false;
-                } else {
-                    addressBar.setVisibility(View.VISIBLE);
-                    addressField.requestFocus();
-                    showKeyboard(v);
-                    addressBarOpened = true;
-                }
-                break;
-            case R.id.newtab_open_local:
+        int id = v.getId();
+        if (id == R.id.newtab_open_address_bar) {
+            if (addressBarOpened) {
                 hideKeyboard(v);
-                openLocal();
-                break;
-            case R.id.newtab_address_go:
-            case R.id.newtab_address_field:
-                String url = addressField.getText().toString();
-                if (url.length() == 0) return;
-                hideKeyboard(v);
-                openNewTab(url);
-                break;
+                addressBar.setVisibility(View.GONE);
+                addressBarOpened = false;
+            } else {
+                addressBar.setVisibility(View.VISIBLE);
+                addressField.requestFocus();
+                showKeyboard(v);
+                addressBarOpened = true;
+            }
+        } else if (id == R.id.newtab_open_local) {
+            hideKeyboard(v);
+            openLocal();
+        } else if (id == R.id.newtab_address_go || id == R.id.newtab_address_field) {
+            String url = addressField.getText().toString();
+            if (url.length() == 0) return;
+            hideKeyboard(v);
+            openNewTab(url);
         }
     }
     
@@ -222,15 +218,15 @@ public class NewTabFragment extends Fragment implements AdapterView.OnItemClickL
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         int position = ((AdapterView.AdapterContextMenuInfo) item.getMenuInfo()).position;
-        switch (item.getItemId()) {
-            case R.id.context_menu_quickaccess_move:
-                adapter.setDraggingItem(position);
-                return true;
-            case R.id.context_menu_quickaccess_remove:
-                list.remove(position);
-                adapter.notifyDataSetChanged();
-                saveQuickAccessToPreferences();
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.context_menu_quickaccess_move) {
+            adapter.setDraggingItem(position);
+            return true;
+        } else if (itemId == R.id.context_menu_quickaccess_remove) {
+            list.remove(position);
+            adapter.notifyDataSetChanged();
+            saveQuickAccessToPreferences();
+            return true;
         }
         return false;
     }
@@ -509,83 +505,83 @@ public class NewTabFragment extends Fragment implements AdapterView.OnItemClickL
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         final ChanModule chan = chansAdapter.getItem(((AdapterView.AdapterContextMenuInfo) item.getMenuInfo()).position);
-                        switch (item.getItemId()) {
-                            case R.id.context_menu_favorites_from_fragment:
-                                if (MainApplication.getInstance().database.isFavorite(chan.getChanName(), null, null, null)) {
-                                    MainApplication.getInstance().database.removeFavorite(chan.getChanName(), null, null, null);
-                                } else {
-                                    try {
-                                        UrlPageModel indexPage = new UrlPageModel();
-                                        indexPage.chanName = chan.getChanName();
-                                        indexPage.type = UrlPageModel.TYPE_INDEXPAGE;
-                                        MainApplication.getInstance().database.addFavorite(
-                                                chan.getChanName(), null, null, null, chan.getChanName(), chan.buildUrl(indexPage));
-                                    } catch (Exception e) {
-                                        Logger.e(TAG, e);
-                                    }
+                        int itemId = item.getItemId();
+                        if (itemId == R.id.context_menu_favorites_from_fragment) {
+                            if (MainApplication.getInstance().database.isFavorite(chan.getChanName(), null, null, null)) {
+                                MainApplication.getInstance().database.removeFavorite(chan.getChanName(), null, null, null);
+                            } else {
+                                try {
+                                    UrlPageModel indexPage = new UrlPageModel();
+                                    indexPage.chanName = chan.getChanName();
+                                    indexPage.type = UrlPageModel.TYPE_INDEXPAGE;
+                                    MainApplication.getInstance().database.addFavorite(
+                                            chan.getChanName(), null, null, null, chan.getChanName(), chan.buildUrl(indexPage));
+                                } catch (Exception e) {
+                                    Logger.e(TAG, e);
                                 }
-                                return true;
-                            case R.id.context_menu_quickaccess_add:
-                                QuickAccess.Entry newEntry = new QuickAccess.Entry();
-                                newEntry.chan = chan;
-                                list.add(0, newEntry);
-                                adapter.notifyDataSetChanged();
-                                saveQuickAccessToPreferences();
-                                chansListDialog.dismiss();
-                                return true;
-                            case R.id.context_menu_quickaccess_custom_board:
-                                LinearLayout dialogLayout = new LinearLayout(activity);
-                                dialogLayout.setOrientation(LinearLayout.VERTICAL);
-                                final EditText boardField = new EditText(activity);
-                                final EditText descriptionField = new EditText(activity);
-                                boardField.setHint(R.string.newtab_quickaccess_addcustom_boardcode);
-                                descriptionField.setHint(R.string.newtab_quickaccess_addcustom_boarddesc);
-                                LinearLayout.LayoutParams fieldsParams =
-                                        new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                                dialogLayout.addView(boardField, fieldsParams);
-                                dialogLayout.addView(descriptionField, fieldsParams);
-                                DialogInterface.OnClickListener onOkClicked = new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        String boardName = boardField.getText().toString();
-                                        for (QuickAccess.Entry entry : list)
-                                            if (entry.boardName != null && entry.chan != null)
-                                                if (entry.chan.getChanName().equals(chan.getChanName()) && entry.boardName.equals(boardName)) {
-                                                    Toast.makeText(activity,
-                                                            R.string.newtab_quickaccess_addcustom_already_exists, Toast.LENGTH_LONG).show();
-                                                    return;
-                                                }
-                                        
-                                        try {
-                                            if (boardName.trim().length() == 0) throw new Exception();
-                                            UrlPageModel boardPageModel = new UrlPageModel();
-                                            boardPageModel.type = UrlPageModel.TYPE_BOARDPAGE;
-                                            boardPageModel.chanName = chan.getChanName();
-                                            boardPageModel.boardName = boardName;
-                                            boardPageModel.boardPage = UrlPageModel.DEFAULT_FIRST_PAGE;
-                                            chan.buildUrl(boardPageModel); //проверка, что существование такой доски на данной имиджборде возможно
-                                        } catch (Exception e) {
-                                            Toast.makeText(activity, R.string.newtab_quickaccess_addcustom_incorrect_code, Toast.LENGTH_LONG).show();
-                                            return;
-                                        }
-                                        
-                                        QuickAccess.Entry newEntry = new QuickAccess.Entry();
-                                        newEntry.chan = chan;
-                                        newEntry.boardName = boardName;
-                                        newEntry.boardDescription = descriptionField.getText().toString();
-                                        list.add(0, newEntry);
-                                        adapter.notifyDataSetChanged();
-                                        saveQuickAccessToPreferences();
-                                        chansListDialog.dismiss();
+                            }
+                            return true;
+                        } else if (itemId == R.id.context_menu_quickaccess_add) {
+                            QuickAccess.Entry newEntry = new QuickAccess.Entry();
+                            newEntry.chan = chan;
+                            list.add(0, newEntry);
+                            adapter.notifyDataSetChanged();
+                            saveQuickAccessToPreferences();
+                            chansListDialog.dismiss();
+                            return true;
+                        } else if (itemId == R.id.context_menu_quickaccess_custom_board) {
+                            LinearLayout dialogLayout = new LinearLayout(activity);
+                            dialogLayout.setOrientation(LinearLayout.VERTICAL);
+                            final EditText boardField = new EditText(activity);
+                            final EditText descriptionField = new EditText(activity);
+                            boardField.setHint(R.string.newtab_quickaccess_addcustom_boardcode);
+                            descriptionField.setHint(R.string.newtab_quickaccess_addcustom_boarddesc);
+                            LinearLayout.LayoutParams fieldsParams =
+                                    new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                            dialogLayout.addView(boardField, fieldsParams);
+                            dialogLayout.addView(descriptionField, fieldsParams);
+                            DialogInterface.OnClickListener onOkClicked = new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    String boardName = boardField.getText().toString();
+                                    for (QuickAccess.Entry entry : list)
+                                        if (entry.boardName != null && entry.chan != null)
+                                            if (entry.chan.getChanName().equals(chan.getChanName()) && entry.boardName.equals(boardName)) {
+                                                Toast.makeText(activity,
+                                                        R.string.newtab_quickaccess_addcustom_already_exists, Toast.LENGTH_LONG).show();
+                                                return;
+                                            }
+                                    
+                                    try {
+                                        if (boardName.trim().length() == 0) throw new Exception();
+                                        UrlPageModel boardPageModel = new UrlPageModel();
+                                        boardPageModel.type = UrlPageModel.TYPE_BOARDPAGE;
+                                        boardPageModel.chanName = chan.getChanName();
+                                        boardPageModel.boardName = boardName;
+                                        boardPageModel.boardPage = UrlPageModel.DEFAULT_FIRST_PAGE;
+                                        chan.buildUrl(boardPageModel); //проверка, что существование такой доски на данной имиджборде возможно
+                                    } catch (Exception e) {
+                                        Toast.makeText(activity, R.string.newtab_quickaccess_addcustom_incorrect_code, Toast.LENGTH_LONG).show();
+                                        return;
                                     }
-                                };
-                                new AlertDialog.Builder(activity).
-                                        setTitle(resources.getString(R.string.newtab_quickaccess_addcustom_title, chan.getChanName())).
-                                        setView(dialogLayout).
-                                        setPositiveButton(android.R.string.ok, onOkClicked).
-                                        setNegativeButton(android.R.string.cancel, null).
-                                        show();
-                                return true;
+                                    
+                                    QuickAccess.Entry newEntry = new QuickAccess.Entry();
+                                    newEntry.chan = chan;
+                                    newEntry.boardName = boardName;
+                                    newEntry.boardDescription = descriptionField.getText().toString();
+                                    list.add(0, newEntry);
+                                    adapter.notifyDataSetChanged();
+                                    saveQuickAccessToPreferences();
+                                    chansListDialog.dismiss();
+                                }
+                            };
+                            new AlertDialog.Builder(activity).
+                                    setTitle(resources.getString(R.string.newtab_quickaccess_addcustom_title, chan.getChanName())).
+                                    setView(dialogLayout).
+                                    setPositiveButton(android.R.string.ok, onOkClicked).
+                                    setNegativeButton(android.R.string.cancel, null).
+                                    show();
+                            return true;
                         }
                         return false;
                     }

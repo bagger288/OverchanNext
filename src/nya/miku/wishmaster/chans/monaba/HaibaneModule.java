@@ -25,7 +25,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceGroup;
-import android.support.v4.content.res.ResourcesCompat;
+import androidx.core.content.res.ResourcesCompat;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.tuple.Pair;

@@ -15,12 +15,12 @@ import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.widget.DrawerLayout;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.core.view.GravityCompat;
+import androidx.core.view.ViewCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 //import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,7 +28,7 @@ import android.view.View;
 
 /**
  * This class provides a handy way to tie together the functionality of
- * {@link android.support.v4.widget.DrawerLayout} and the framework <code>ActionBar</code> to
+ * {@link androidx.drawerlayout.widget.DrawerLayout} and the framework <code>ActionBar</code> to
  * implement the recommended design for navigation drawers.
  *
  * <p>To use <code>ActionBarDrawerToggle</code>, create one in your Activity and call through
@@ -47,7 +47,7 @@ import android.view.View;
  * has occurred.</p>
  *
  * <p><code>ActionBarDrawerToggle</code> can be used directly as a
- * {@link android.support.v4.widget.DrawerLayout.DrawerListener}, or if you are already providing
+ * {@link androidx.drawerlayout.widget.DrawerLayout.DrawerListener}, or if you are already providing
  * your own listener, call through to each of the listener methods from your own.</p>
  *
  * <p>

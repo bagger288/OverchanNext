@@ -39,6 +39,12 @@ public class GallerySettings implements Parcelable {
     private static final int FLAG_ORIGINAL_NAMES = 1 << 10;
     private static final int FLAG_AUTOPLAY_MEDIA = 1 << 11;
     private static final int FLAG_LOOP_MEDIA = 1 << 12;
+    private static final int FLAG_EXOPLAYER_VIDEO_PLAYER = 1 << 13;
+    private static final int FLAG_SYSTEM_VIDEO_PLAYER = 1 << 14;
+    private static final int FLAG_EXO_CONTROLS_GESTURES = 1 << 15;
+    private static final int FLAG_EXO_CONTROLS_SEEKBAR = 1 << 16;
+    private static final int FLAG_EXO_CONTROLS_CONTROLLER = 1 << 17;
+    private static final int FLAG_EXO_CONTROLS_CLASSIC = 1 << 18;
     
     private final int flags;
     private final File downloadsDir;
@@ -95,6 +101,12 @@ public class GallerySettings implements Parcelable {
         if (settings.isDownloadOriginalNames()) flags |= FLAG_ORIGINAL_NAMES;
         if (settings.autoplayMedia()) flags |= FLAG_AUTOPLAY_MEDIA;
         if (settings.loopMedia()) flags |= FLAG_LOOP_MEDIA;
+        if (settings.useExoPlayer()) flags |= FLAG_EXOPLAYER_VIDEO_PLAYER;
+        if (settings.useSystemVideoPlayer()) flags |= FLAG_SYSTEM_VIDEO_PLAYER;
+        if (settings.isExoControlsGestures()) flags |= FLAG_EXO_CONTROLS_GESTURES;
+        if (settings.isExoControlsSeekBar()) flags |= FLAG_EXO_CONTROLS_SEEKBAR;
+        if (settings.isExoControlsController()) flags |= FLAG_EXO_CONTROLS_CONTROLLER;
+        if (settings.isExoControlsClassic()) flags |= FLAG_EXO_CONTROLS_CLASSIC;
         return new GallerySettings(flags, settings.getDownloadDirectory(), settings.getTheme());
     }
     
@@ -132,6 +144,30 @@ public class GallerySettings implements Parcelable {
     
     public boolean useInternalVideoPlayer() {
         return (flags & FLAG_INTERNAL_VIDEO_PLAYER) != 0;
+    }
+
+    public boolean useExoPlayer() {
+        return (flags & FLAG_EXOPLAYER_VIDEO_PLAYER) != 0;
+    }
+
+    public boolean useSystemVideoPlayer() {
+        return (flags & FLAG_SYSTEM_VIDEO_PLAYER) != 0;
+    }
+
+    public boolean isExoControlsGestures() {
+        return (flags & FLAG_EXO_CONTROLS_GESTURES) != 0;
+    }
+
+    public boolean isExoControlsSeekBar() {
+        return (flags & FLAG_EXO_CONTROLS_SEEKBAR) != 0;
+    }
+
+    public boolean isExoControlsController() {
+        return (flags & FLAG_EXO_CONTROLS_CONTROLLER) != 0;
+    }
+
+    public boolean isExoControlsClassic() {
+        return (flags & FLAG_EXO_CONTROLS_CLASSIC) != 0;
     }
     
     public boolean useInternalAudioPlayer() {

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <resources>
-    <string name="app_name">Overchan</string>
+    <string name="app_name">OverchanX</string>
     
     <string name="drawer_open">Open drawer</string>
     <string name="drawer_close">Close drawer</string>
@@ -320,6 +320,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <string name="filedialog_cancel">Cancel</string>
     <string name="filedialog_create">Save</string>
     <string name="filedialog_no_data">No Data</string>
+    <string name="filedialog_browse_system">Browse (System)</string>
     
     <string name="gallery_error_incorrect_attachment">Incorrect attachment</string>
     <string name="gallery_error_play">Cannot play the file</string>
@@ -346,7 +347,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
     <string name="app_update_checking">Checking for updates</string>
     <string name="app_update_update_available">New version is available</string>
-    <string name="app_update_update_dialog_text">%s ➞ %s\n\n%s\n\nDo you want to install it?</string>
+    <string name="app_update_update_dialog_text" formatted="false">%s ➞ %s\n\n%s\n\nDo you want to install it?</string>
     <string name="app_update_update_not_required">No update required</string>
     <string name="app_update_update_error">Cannot check for updates</string>
     <string name="app_update_download_error">Cannot download update</string>
@@ -398,7 +399,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <string name="ssl_certificates_title">Certificates</string>
     <string name="ssl_certificate_delete">Delete</string>
     
-    <string name="crash_dialog_title">Overchan has crashed</string>
+    <string name="crash_dialog_title">OverchanX has crashed</string>
     <string name="crash_dialog_text">An unexpected error occurred forcing the application to stop.
         Please help fix this by sending the error report, all you have to do is click OK.</string>
     <string name="crash_dialog_comment_prompt">You might add your comments about the problem below:</string>
@@ -452,7 +453,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <string name="pref_cat_subscriptions">Reply tracking</string>
     <string name="pref_cat_cache">Cache</string>
     <string name="pref_cat_update">Check for updates</string>
-    <string name="pref_cat_about">About Overchan</string>
+    <string name="pref_cat_about">About OverchanX</string>
     <string name="pref_cat_proxy">Connection</string>
     <string name="pref_use_proxy">Proxy</string>
     <string name="pref_use_proxy_summary">Use HTTP proxy</string>
@@ -539,6 +540,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <string name="pref_gallery_nativegif_summary">Use a native library libgif</string>
     <string name="pref_gallery_videoplayer_title">Built-in video player</string>
     <string name="pref_gallery_videoplayer_summary">May not work on older versions of Android</string>
+    <string name="pref_gallery_video_player_type_title">Video player engine</string>
+    <string-array name="pref_gallery_video_player_type_choices">
+        <item>ExoPlayer (recommended)</item>
+        <item>System (MediaPlayer / TextureView)</item>
+        <item>WebView (HTML5)</item>
+    </string-array>
+    <string name="pref_gallery_exoplayer_controls_title">ExoPlayer controls</string>
+    <string-array name="pref_gallery_exoplayer_controls_choices">
+        <item>Double-tap to seek (+/- 5s)</item>
+        <item>Compact seek bar (SeekBar)</item>
+        <item>Standard ExoPlayer controller</item>
+        <item>Tap to pause only (classic)</item>
+    </string-array>
+    <string name="gallery_exoplayer_seek_forward">+5s</string>
+    <string name="gallery_exoplayer_seek_rewind">-5s</string>
     <string name="pref_gallery_webview_videoplayer_title">Use WebView video player</string>
     <string name="pref_gallery_webview_videoplayer_summary">Use WebView instead of VideoView as built-in video player</string>
     <string name="pref_do_not_download_videos_title">Do not download videos</string>
@@ -591,7 +607,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <string name="pref_update_on_startup_summary">But not more than once a day</string>
     <string name="pref_update_allow_beta_title">Allow beta versions</string>
     <string name="pref_update_allow_beta_summary">Allow installation of beta versions</string>
-    <string name="pref_about_version_title">Overchan Android</string>
+    <string name="pref_about_version_title">OverchanX Android</string>
     <string name="pref_about_license_title">License</string>
     <string name="pref_about_license_summary">GPLv3</string>
     <string name="pref_download_dir_title">Downloads directory</string>

@@ -41,10 +41,12 @@ import nya.miku.wishmaster.lib.ClickableToast;
 import nya.miku.wishmaster.lib.gallery.FixedSubsamplingScaleImageView;
 import nya.miku.wishmaster.lib.gallery.JSWebView;
 import nya.miku.wishmaster.lib.gallery.Jpeg;
+import nya.miku.wishmaster.lib.gallery.TextureVideoView;
 import nya.miku.wishmaster.lib.gallery.TouchGifView;
 import nya.miku.wishmaster.lib.gallery.WebViewFixed;
 import nya.miku.wishmaster.lib.gallery.verticalviewpager.VerticalViewPagerFixed;
 import nya.miku.wishmaster.lib.gifdrawable.GifDrawable;
+import android.graphics.PixelFormat;
 import nya.miku.wishmaster.lib.UriFileUtils;
 import nya.miku.wishmaster.ui.AppearanceUtils;
 import nya.miku.wishmaster.ui.Attachments;
@@ -78,15 +80,17 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
-import android.support.v4.view.MotionEventCompat;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
+import androidx.core.view.MotionEventCompat;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.SparseArray;
+import android.animation.ValueAnimator;
 import android.view.GestureDetector;
+import android.view.ScaleGestureDetector;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -96,6 +100,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebResourceError;
@@ -105,9 +110,20 @@ import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.PlaybackException;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.ui.PlayerControlView;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
+import com.google.android.exoplayer2.upstream.DefaultDataSource;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
 
 public class GalleryActivity extends Activity implements View.OnClickListener, View.OnLongClickListener {
     private static final String TAG = "GalleryActivity";
@@ -238,6 +254,7 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
         if (settings == null) settings = GallerySettings.fromSettings(
                 new ApplicationSettings(PreferenceManager.getDefaultSharedPreferences(getApplication()), getResources()));
         settings.getTheme().setTo(this, R.style.Transparent);
+        getWindow().setFormat(PixelFormat.RGBA_8888);
         super.onCreate(savedInstanceState);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) CompatibilityImpl.setActionBarNoIcon(this);
         
@@ -361,6 +378,14 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
         super.onStop();
         BroadcastReceiver receiver = broadcastReceiver;
         if (receiver != null) unregisterReceiver(receiver);
+        GalleryItemViewTag tag = getCurrentTag();
+        if (tag != null && tag.exoPlayer != null) {
+            try {
+                tag.exoPlayer.pause();
+            } catch (Exception e) {
+                Logger.e(TAG, "cannot pause exoplayer", e);
+            }
+        }
     }
     
     @Override
@@ -384,39 +409,35 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
     
     @Override
     public boolean onLongClick(View v) {
-        switch (v.getId()) {
-            case R.id.action_bar_title:
-                if (fromDialog || fromThread) {
-                    remote.tryScrollParent(attachments.get(currentPosition).getRight(), fromDialog);
-                }
-                finish();
-                return true;
+        if (v.getId() == R.id.action_bar_title) {
+            if (fromDialog || fromThread) {
+                remote.tryScrollParent(attachments.get(currentPosition).getRight(), fromDialog);
+            }
+            finish();
+            return true;
         }
         return false;
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.gallery_navigation_previous:
-                if (currentPosition > 0) {
-                    viewPager.setCurrentItem(--currentPosition);
-                    updateItem();
-                }
-                break;
-            case R.id.gallery_navigation_next:
-                if (currentPosition < attachments.size() - 1) {
-                    viewPager.setCurrentItem(++currentPosition);
-                    updateItem();
-                }
-                break;
-            case R.id.action_bar_title:
-                GalleryItemViewTag tag = getCurrentTag();
-                String info = remote.getAttachmentInfoString(new GalleryAttachmentInfo(tag.attachmentModel, tag.attachmentHash));
-                Toast toast = Toast.makeText(this, info, Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.BOTTOM|Gravity.CENTER, 0, navigationInfo.getHeight() * 10 / 8);
-                toast.show();
-                break;
+        int id = v.getId();
+        if (id == R.id.gallery_navigation_previous) {
+            if (currentPosition > 0) {
+                viewPager.setCurrentItem(--currentPosition);
+                updateItem();
+            }
+        } else if (id == R.id.gallery_navigation_next) {
+            if (currentPosition < attachments.size() - 1) {
+                viewPager.setCurrentItem(++currentPosition);
+                updateItem();
+            }
+        } else if (id == R.id.action_bar_title) {
+            GalleryItemViewTag tag = getCurrentTag();
+            String info = remote.getAttachmentInfoString(new GalleryAttachmentInfo(tag.attachmentModel, tag.attachmentHash));
+            Toast toast = Toast.makeText(this, info, Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.BOTTOM|Gravity.CENTER, 0, navigationInfo.getHeight() * 10 / 8);
+            toast.show();
         }
     }
     
@@ -467,29 +488,29 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_update:
-                updateItem();
-                return true;
-            case R.id.menu_save_attachment:
-                if (!CompatibilityUtils.hasAccessStorage(this)) return true;
-                downloadAttachment();
-                return true;
-            case R.id.menu_open_external:
-                openExternal();
-                return true;
-            case R.id.menu_share:
-                share();
-                return true;
-            case R.id.menu_share_link:
-                shareLink();
-                return true;
-            case R.id.menu_reverse_search:
-                reverseSearch();
-                return true;
-            case R.id.menu_open_browser:
-                openBrowser();
-                return true;
+        int id = item.getItemId();
+        if (id == R.id.menu_update) {
+            updateItem();
+            return true;
+        } else if (id == R.id.menu_save_attachment) {
+            if (!CompatibilityUtils.hasAccessStorage(this)) return true;
+            downloadAttachment();
+            return true;
+        } else if (id == R.id.menu_open_external) {
+            openExternal();
+            return true;
+        } else if (id == R.id.menu_share) {
+            share();
+            return true;
+        } else if (id == R.id.menu_share_link) {
+            shareLink();
+            return true;
+        } else if (id == R.id.menu_reverse_search) {
+            reverseSearch();
+            return true;
+        } else if (id == R.id.menu_open_browser) {
+            openBrowser();
+            return true;
         }
         return false;
     }
@@ -808,7 +829,8 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                 return;
             }
             final String[] exception = new String[1];
-            boolean localOnly = (tag.attachmentModel.type == AttachmentModel.TYPE_VIDEO && settings.useWebViewVideoPlayer() && settings.doNotDownloadVideos());
+            boolean localOnly = (tag.attachmentModel.type == AttachmentModel.TYPE_VIDEO &&
+                    (settings.useWebViewVideoPlayer() || settings.useExoPlayer()) && settings.doNotDownloadVideos());
             File file = remote.getAttachment(new GalleryAttachmentInfo(tag.attachmentModel, tag.attachmentHash), localOnly, new AbstractGetterCallback(this) {
                 @Override
                 public void showLoading() {
@@ -863,8 +885,10 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                 case AttachmentModel.TYPE_VIDEO:
                     if (settings.useWebViewVideoPlayer()) {
                         setWebView(tag, file);
-                    } else {
+                    } else if (settings.useSystemVideoPlayer()) {
                         setVideo(tag, file);
+                    } else {
+                        setExoPlayer(tag, file);
                     }
                     break;
                 case AttachmentModel.TYPE_AUDIO:
@@ -911,7 +935,12 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                     ((FixedSubsamplingScaleImageView) v).recycle();
                 } else if (v != null && v.getId() == R.id.gallery_video_container) {
                     try {
-                        ((VideoView) v.findViewById(R.id.gallery_video_view)).stopPlayback();
+                        View vv = v.findViewById(R.id.gallery_video_view);
+                        if (vv instanceof TextureVideoView) {
+                            ((TextureVideoView) vv).stopPlayback();
+                        } else if (vv instanceof VideoView) {
+                            ((VideoView) vv).stopPlayback();
+                        }
                     } catch (Exception e) {
                         Logger.e(TAG, "cannot release videoview", e);
                     }
@@ -936,8 +965,117 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                 tag.audioPlayer = null;
             }
         }
+        if (tag.exoPlayer != null) {
+            try {
+                tag.exoPlayer.stop();
+                tag.exoPlayer.release();
+            } catch (Exception e) {
+                Logger.e(TAG, "cannot release exoplayer", e);
+            } finally {
+                tag.exoPlayer = null;
+            }
+        }
+        if (tag.exoController != null) {
+            try {
+                tag.exoController.setPlayer(null);
+            } catch (Exception e) {}
+            tag.exoController = null;
+        }
+        if (tag.indicatorHandler != null && tag.indicatorRunnable != null) {
+            tag.indicatorHandler.removeCallbacks(tag.indicatorRunnable);
+        }
+        tag.indicatorHandler = null;
+        tag.indicatorRunnable = null;
         
         System.gc();
+    }
+    
+    private void showExoIndicator(final GalleryItemViewTag tag, final TextView indicator, String text) {
+        if (indicator == null) return;
+        indicator.setText(text);
+        indicator.setVisibility(View.VISIBLE);
+        if (tag.indicatorHandler == null) {
+            tag.indicatorHandler = new Handler();
+        }
+        if (tag.indicatorRunnable != null) {
+            tag.indicatorHandler.removeCallbacks(tag.indicatorRunnable);
+        }
+        tag.indicatorRunnable = new Runnable() {
+            @Override
+            public void run() {
+                indicator.setVisibility(View.GONE);
+            }
+        };
+        tag.indicatorHandler.postDelayed(tag.indicatorRunnable, 800);
+    }
+
+    private static void clampExoTranslation(float[] transX, float[] transY, float scale, float width, float height) {
+        if (scale <= 1.0f || width <= 0 || height <= 0) {
+            transX[0] = 0f;
+            transY[0] = 0f;
+            return;
+        }
+        float scaledW = width * scale;
+        float scaledH = height * scale;
+        float minX = width - scaledW;
+        float maxX = 0f;
+        transX[0] = Math.max(minX, Math.min(maxX, transX[0]));
+
+        float minY = height - scaledH;
+        float maxY = 0f;
+        transY[0] = Math.max(minY, Math.min(maxY, transY[0]));
+    }
+
+    private static void applyExoTransform(View view, float scale, float transX, float transY) {
+        if (view == null) return;
+        view.setPivotX(0f);
+        view.setPivotY(0f);
+        view.setScaleX(scale);
+        view.setScaleY(scale);
+        view.setTranslationX(transX);
+        view.setTranslationY(transY);
+    }
+
+    private void animateExoZoom(final View targetView, final float[] currentScale, final float[] currentTransX, final float[] currentTransY,
+                                final float targetScale, final float focusX, final float focusY) {
+        if (targetView == null) return;
+        final float startScale = currentScale[0];
+        final float startTransX = currentTransX[0];
+        final float startTransY = currentTransY[0];
+        final float width = targetView.getWidth();
+        final float height = targetView.getHeight();
+
+        final float targetTransX;
+        final float targetTransY;
+        if (targetScale <= 1.01f) {
+            targetTransX = 0f;
+            targetTransY = 0f;
+        } else {
+            float[] tX = new float[]{focusX - (focusX - startTransX) * (targetScale / Math.max(startScale, 0.01f))};
+            float[] tY = new float[]{focusY - (focusY - startTransY) * (targetScale / Math.max(startScale, 0.01f))};
+            clampExoTranslation(tX, tY, targetScale, width, height);
+            targetTransX = tX[0];
+            targetTransY = tY[0];
+        }
+
+        ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+        animator.setDuration(220);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float f = (Float) animation.getAnimatedValue();
+                currentScale[0] = startScale + (targetScale - startScale) * f;
+                currentTransX[0] = startTransX + (targetTransX - startTransX) * f;
+                currentTransY[0] = startTransY + (targetTransY - startTransY) * f;
+                if (currentScale[0] <= 1.01f && f >= 1.0f) {
+                    currentScale[0] = 1.0f;
+                    currentTransX[0] = 0f;
+                    currentTransY[0] = 0f;
+                }
+                applyExoTransform(targetView, currentScale[0], currentTransX[0], currentTransY[0]);
+            }
+        });
+        animator.start();
     }
     
     private void setStaticImage(final GalleryItemViewTag tag, final File file) {
@@ -1027,15 +1165,15 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                 tag.loadingView.setVisibility(View.GONE);
                 tag.layout.setVisibility(View.VISIBLE);
                 View videoContainer = inflater.inflate(R.layout.gallery_videoplayer, tag.layout);
-                final VideoView videoView = (VideoView)videoContainer.findViewById(R.id.gallery_video_view);
-                final TextView durationView = (TextView)videoContainer.findViewById(R.id.gallery_video_duration);
+                final TextureVideoView videoView = (TextureVideoView) videoContainer.findViewById(R.id.gallery_video_view);
+                final TextView durationView = (TextView) videoContainer.findViewById(R.id.gallery_video_duration);
 
                 videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
                     public void onPrepared(final MediaPlayer mp) {
-                        mp.setLooping(settings.loopMedia());
+                        videoView.setLooping(settings.loopMedia());
 
-                        durationView.setText("00:00 / " + formatMediaPlayerTime(mp.getDuration()));
+                        durationView.setText("00:00 / " + formatMediaPlayerTime(videoView.getDuration()));
 
                         tag.timer = new Timer();
                         tag.timer.schedule(new TimerTask() {
@@ -1045,8 +1183,8 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                                     @Override
                                     public void run() {
                                         try {
-                                            durationView.setText(formatMediaPlayerTime(mp.getCurrentPosition()) + " / " +
-                                                    formatMediaPlayerTime(mp.getDuration()));
+                                            durationView.setText(formatMediaPlayerTime(videoView.getCurrentPosition()) + " / " +
+                                                    formatMediaPlayerTime(videoView.getDuration()));
                                         } catch (Exception e) {
                                             Logger.e(TAG, e);
                                             tag.timer.cancel();
@@ -1071,15 +1209,14 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                 videoView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if (!videoView.isPlaying()) {
+                        if (videoView.isPlaying()) {
+                            videoView.pause();
+                        } else {
                             videoView.start();
                         }
                     }
                 });
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR) {
-                    CompatibilityImpl.setVideoViewZOrderOnTop(videoView);
-                }
                 videoView.setVideoPath(file.getAbsolutePath());
             }
         };
@@ -1109,6 +1246,400 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
             });
         } else {
             runOnUiThread(startVideoView);
+        }
+    }
+    
+    private void setExoPlayer(final GalleryItemViewTag tag, final File file) {
+        final Runnable startExoPlayerView = new Runnable() {
+            @Override
+            public void run() {
+                recycleTag(tag, false);
+                tag.thumbnailView.setVisibility(View.GONE);
+                tag.loadingView.setVisibility(View.GONE);
+                tag.layout.setVisibility(View.VISIBLE);
+                View videoContainer = inflater.inflate(R.layout.gallery_exoplayer, tag.layout);
+                final View zoomContainer = videoContainer.findViewById(R.id.gallery_exoplayer_zoom_container);
+                final View touchOverlay = videoContainer.findViewById(R.id.gallery_exoplayer_touch_overlay);
+                final PlayerView playerView = (PlayerView) videoContainer.findViewById(R.id.gallery_exoplayer_view);
+                final View controllerView = videoContainer.findViewById(R.id.gallery_exoplayer_controller);
+                final PlayerControlView controller = controllerView instanceof PlayerControlView ? (PlayerControlView) controllerView : null;
+                tag.exoController = controller;
+                final View bottomBar = videoContainer.findViewById(R.id.gallery_exoplayer_bottom_bar);
+                final SeekBar seekBar = (SeekBar) videoContainer.findViewById(R.id.gallery_exoplayer_seekbar);
+                final TextView durationView = (TextView) videoContainer.findViewById(R.id.gallery_exoplayer_duration);
+                final TextView overlayIndicator = (TextView) videoContainer.findViewById(R.id.gallery_exoplayer_overlay_indicator);
+
+                ExoPlayer.Builder builder = new ExoPlayer.Builder(GalleryActivity.this);
+                String userAgent = remote != null ? remote.getUserAgentString() : null;
+                if (userAgent != null && !userAgent.isEmpty()) {
+                    DefaultHttpDataSource.Factory httpDataSourceFactory = new DefaultHttpDataSource.Factory().setUserAgent(userAgent);
+                    DefaultDataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(GalleryActivity.this, httpDataSourceFactory);
+                    builder.setMediaSourceFactory(new DefaultMediaSourceFactory(dataSourceFactory));
+                }
+                final ExoPlayer player = builder.build();
+                tag.exoPlayer = player;
+                playerView.setPlayer(player);
+                playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+                playerView.setUseController(false);
+
+                final boolean isController = settings.isExoControlsController();
+                final boolean isSeekBarMode = settings.isExoControlsSeekBar();
+                final boolean isGesturesMode = settings.isExoControlsGestures();
+
+                final float[] currentScale = new float[]{1.0f};
+                final float[] currentTransX = new float[]{0.0f};
+                final float[] currentTransY = new float[]{0.0f};
+                final boolean[] isScaling = new boolean[]{false};
+                final float[] lastTouchX = new float[]{0.0f};
+                final float[] lastTouchY = new float[]{0.0f};
+
+                final ScaleGestureDetector scaleDetector = new ScaleGestureDetector(GalleryActivity.this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                    @Override
+                    public boolean onScaleBegin(ScaleGestureDetector detector) {
+                        isScaling[0] = true;
+                        if (zoomContainer != null && zoomContainer.getParent() != null) {
+                            zoomContainer.getParent().requestDisallowInterceptTouchEvent(true);
+                        }
+                        if (isController && controller != null && controller.isVisible()) {
+                            controller.hide();
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onScale(ScaleGestureDetector detector) {
+                        float scaleFactor = detector.getScaleFactor();
+                        float focusX = detector.getFocusX();
+                        float focusY = detector.getFocusY();
+                        float prevScale = currentScale[0];
+                        float newScale = Math.max(1.0f, Math.min(5.0f, prevScale * scaleFactor));
+                        if (newScale <= 1.01f) {
+                            newScale = 1.0f;
+                            currentTransX[0] = 0f;
+                            currentTransY[0] = 0f;
+                        } else {
+                            float contentX = (focusX - currentTransX[0]) / prevScale;
+                            float contentY = (focusY - currentTransY[0]) / prevScale;
+                            currentTransX[0] = focusX - contentX * newScale;
+                            currentTransY[0] = focusY - contentY * newScale;
+                            clampExoTranslation(currentTransX, currentTransY, newScale,
+                                    zoomContainer != null && zoomContainer.getWidth() > 0 ? zoomContainer.getWidth() : playerView.getWidth(),
+                                    zoomContainer != null && zoomContainer.getHeight() > 0 ? zoomContainer.getHeight() : playerView.getHeight());
+                        }
+                        currentScale[0] = newScale;
+                        applyExoTransform(zoomContainer, currentScale[0], currentTransX[0], currentTransY[0]);
+                        return true;
+                    }
+
+                    @Override
+                    public void onScaleEnd(ScaleGestureDetector detector) {
+                        isScaling[0] = false;
+                        if (currentScale[0] <= 1.01f) {
+                            currentScale[0] = 1.0f;
+                            currentTransX[0] = 0f;
+                            currentTransY[0] = 0f;
+                            applyExoTransform(zoomContainer, 1.0f, 0f, 0f);
+                            if (zoomContainer != null && zoomContainer.getParent() != null) {
+                                zoomContainer.getParent().requestDisallowInterceptTouchEvent(false);
+                            }
+                        }
+                    }
+                });
+
+                final GestureDetector gestureDetector = new GestureDetector(GalleryActivity.this, new GestureDetector.SimpleOnGestureListener() {
+                    @Override
+                    public boolean onDown(MotionEvent e) {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onSingleTapConfirmed(MotionEvent e) {
+                        if (isController) {
+                            if (controller != null) {
+                                if (controller.isVisible()) {
+                                    controller.hide();
+                                } else {
+                                    controller.show();
+                                }
+                            }
+                        } else {
+                            if (player.isPlaying()) {
+                                player.pause();
+                            } else {
+                                player.play();
+                            }
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public boolean onDoubleTap(MotionEvent e) {
+                        if (currentScale[0] > 1.05f) {
+                            animateExoZoom(zoomContainer, currentScale, currentTransX, currentTransY, 1.0f, e.getX(), e.getY());
+                            return true;
+                        }
+
+                        if (isGesturesMode || isSeekBarMode) {
+                            float width = zoomContainer != null && zoomContainer.getWidth() > 0 ? zoomContainer.getWidth() : playerView.getWidth();
+                            float x = e.getX();
+                            long current = player.getCurrentPosition();
+                            long duration = player.getDuration();
+                            if (x < width * 0.5f) {
+                                long newPos = Math.max(0, current - 5000);
+                                player.seekTo(newPos);
+                                showExoIndicator(tag, overlayIndicator, getString(R.string.gallery_exoplayer_seek_rewind));
+                            } else {
+                                long newPos = duration > 0 ? Math.min(duration, current + 5000) : current + 5000;
+                                player.seekTo(newPos);
+                                showExoIndicator(tag, overlayIndicator, getString(R.string.gallery_exoplayer_seek_forward));
+                            }
+                        } else {
+                            animateExoZoom(zoomContainer, currentScale, currentTransX, currentTransY, 2.5f, e.getX(), e.getY());
+                        }
+                        return true;
+                    }
+                });
+
+                final View.OnTouchListener overlayTouchListener = new View.OnTouchListener() {
+                    @SuppressLint("ClickableViewAccessibility")
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+                        scaleDetector.onTouchEvent(event);
+                        gestureDetector.onTouchEvent(event);
+
+                        int action = event.getActionMasked();
+                        switch (action) {
+                            case MotionEvent.ACTION_DOWN:
+                                lastTouchX[0] = event.getX();
+                                lastTouchY[0] = event.getY();
+                                if (currentScale[0] > 1.01f) {
+                                    if (v.getParent() != null) v.getParent().requestDisallowInterceptTouchEvent(true);
+                                }
+                                break;
+
+                            case MotionEvent.ACTION_POINTER_DOWN:
+                                if (v.getParent() != null) v.getParent().requestDisallowInterceptTouchEvent(true);
+                                break;
+
+                            case MotionEvent.ACTION_POINTER_UP:
+                                int upIndex = event.getActionIndex();
+                                int remainingIndex = upIndex == 0 ? 1 : 0;
+                                if (event.getPointerCount() > 1) {
+                                    lastTouchX[0] = event.getX(remainingIndex);
+                                    lastTouchY[0] = event.getY(remainingIndex);
+                                }
+                                break;
+
+                            case MotionEvent.ACTION_MOVE:
+                                if (!isScaling[0] && currentScale[0] > 1.01f) {
+                                    float currX = event.getX();
+                                    float currY = event.getY();
+                                    float dx = currX - lastTouchX[0];
+                                    float dy = currY - lastTouchY[0];
+                                    currentTransX[0] += dx;
+                                    currentTransY[0] += dy;
+                                    clampExoTranslation(currentTransX, currentTransY, currentScale[0],
+                                            zoomContainer != null && zoomContainer.getWidth() > 0 ? zoomContainer.getWidth() : playerView.getWidth(),
+                                            zoomContainer != null && zoomContainer.getHeight() > 0 ? zoomContainer.getHeight() : playerView.getHeight());
+                                    applyExoTransform(zoomContainer, currentScale[0], currentTransX[0], currentTransY[0]);
+                                    lastTouchX[0] = currX;
+                                    lastTouchY[0] = currY;
+                                    if (v.getParent() != null) v.getParent().requestDisallowInterceptTouchEvent(true);
+                                }
+                                break;
+
+                            case MotionEvent.ACTION_UP:
+                            case MotionEvent.ACTION_CANCEL:
+                                isScaling[0] = false;
+                                if (currentScale[0] <= 1.01f) {
+                                    currentScale[0] = 1.0f;
+                                    currentTransX[0] = 0f;
+                                    currentTransY[0] = 0f;
+                                    applyExoTransform(zoomContainer, 1.0f, 0f, 0f);
+                                    if (v.getParent() != null) v.getParent().requestDisallowInterceptTouchEvent(false);
+                                }
+                                break;
+                        }
+                        return true;
+                    }
+                };
+
+                if (isController) {
+                    if (bottomBar != null) bottomBar.setVisibility(View.GONE);
+                    if (controller != null) {
+                        controller.setVisibility(View.VISIBLE);
+                        controller.setPlayer(player);
+                        controller.setShowTimeoutMs(3500);
+                        controller.show();
+                    }
+                } else {
+                    if (controller != null) {
+                        controller.setVisibility(View.GONE);
+                        controller.setPlayer(null);
+                    }
+                    if (bottomBar != null) bottomBar.setVisibility(View.VISIBLE);
+                    if (seekBar != null) {
+                        seekBar.setVisibility(isSeekBarMode ? View.VISIBLE : View.GONE);
+                    }
+                }
+
+                if (touchOverlay != null) {
+                    touchOverlay.setVisibility(View.VISIBLE);
+                    touchOverlay.setOnTouchListener(overlayTouchListener);
+                }
+
+                if (controller != null) {
+                    final boolean[] isForwarding = new boolean[]{false};
+                    controller.setOnTouchListener(new View.OnTouchListener() {
+                        @SuppressLint("ClickableViewAccessibility")
+                        @Override
+                        public boolean onTouch(View v, MotionEvent event) {
+                            int action = event.getActionMasked();
+                            if (event.getPointerCount() >= 2 || currentScale[0] > 1.01f || isForwarding[0]) {
+                                if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
+                                    isForwarding[0] = true;
+                                }
+                                boolean res = overlayTouchListener.onTouch(touchOverlay != null ? touchOverlay : v, event);
+                                if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                                    isForwarding[0] = false;
+                                }
+                                return res;
+                            }
+                            return false;
+                        }
+                    });
+                }
+
+                final boolean[] isUserTracking = new boolean[]{false};
+                if (!isController && isSeekBarMode && seekBar != null) {
+                    seekBar.setMax(1000);
+                    seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                        @Override
+                        public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+                            if (fromUser) {
+                                long total = player.getDuration();
+                                if (total > 0) {
+                                    long newPosition = ((long) progress * total) / sb.getMax();
+                                    durationView.setText(formatMediaPlayerTime((int) newPosition) + " / " +
+                                            formatMediaPlayerTime((int) total));
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onStartTrackingTouch(SeekBar sb) {
+                            isUserTracking[0] = true;
+                        }
+
+                        @Override
+                        public void onStopTrackingTouch(SeekBar sb) {
+                            long total = player.getDuration();
+                            if (total > 0) {
+                                long newPosition = ((long) sb.getProgress() * total) / sb.getMax();
+                                player.seekTo(newPosition);
+                            }
+                            isUserTracking[0] = false;
+                        }
+                    });
+                }
+
+                player.addListener(new Player.Listener() {
+                    @Override
+                    public void onPlaybackStateChanged(int playbackState) {
+                        if (playbackState == Player.STATE_BUFFERING) {
+                            tag.loadingView.setVisibility(View.VISIBLE);
+                        } else if (playbackState == Player.STATE_READY) {
+                            tag.loadingView.setVisibility(View.GONE);
+                            long duration = player.getDuration();
+                            if (duration > 0 && !isController) {
+                                durationView.setText(formatMediaPlayerTime((int) player.getCurrentPosition()) + " / " +
+                                        formatMediaPlayerTime((int) duration));
+                                if (isSeekBarMode && seekBar != null && !isUserTracking[0]) {
+                                    seekBar.setProgress((int) ((player.getCurrentPosition() * 1000) / duration));
+                                }
+                            }
+                        } else if (playbackState == Player.STATE_ENDED) {
+                            tag.loadingView.setVisibility(View.GONE);
+                        }
+                    }
+
+                    @Override
+                    public void onPlayerError(PlaybackException error) {
+                        Logger.e(TAG, "ExoPlayer error", error);
+                        tag.loadingView.setVisibility(View.GONE);
+                        if (tag.timer != null) tag.timer.cancel();
+                        showError(tag, getString(R.string.gallery_error_play));
+                    }
+                });
+
+                if (!isController) {
+                    tag.timer = new Timer();
+                    tag.timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        if (tag.exoPlayer != null) {
+                                            long current = tag.exoPlayer.getCurrentPosition();
+                                            long total = tag.exoPlayer.getDuration();
+                                            if (total > 0) {
+                                                durationView.setText(formatMediaPlayerTime((int) current) + " / " +
+                                                        formatMediaPlayerTime((int) total));
+                                                if (isSeekBarMode && seekBar != null && !isUserTracking[0]) {
+                                                    seekBar.setProgress((int) ((current * 1000) / total));
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception e) {
+                                        Logger.e(TAG, e);
+                                        if (tag.timer != null) tag.timer.cancel();
+                                    }
+                                }
+                            });
+                        }
+                    }, 500, 500);
+                }
+
+                String videoUrl = file != null ? Uri.fromFile(file).toString() : (remote != null ? remote.getAbsoluteUrl(tag.attachmentModel.path) : null);
+                if (videoUrl == null) {
+                    showError(tag, getString(R.string.gallery_error_play));
+                    return;
+                }
+                MediaItem mediaItem = MediaItem.fromUri(Uri.parse(videoUrl));
+                player.setMediaItem(mediaItem);
+                player.setRepeatMode(settings.loopMedia() ? Player.REPEAT_MODE_ONE : Player.REPEAT_MODE_OFF);
+                player.prepare();
+                player.play();
+            }
+        };
+        if (!settings.useInternalVideoPlayer()) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setOnClickView(tag, getString(R.string.gallery_tap_to_play), new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openExternal();
+                        }
+                    });
+                }
+            });
+        } else if (!settings.autoplayMedia()) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setOnClickView(tag, getString(R.string.gallery_tap_to_play), new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            runOnUiThread(startExoPlayerView);
+                        }
+                    });
+                }
+            });
+        } else {
+            runOnUiThread(startExoPlayerView);
         }
     }
     
@@ -1256,6 +1787,10 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                     new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             
             private void prepareWebView(WebView webView) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+                }
+                webView.setWebChromeClient(new WebChromeClient());
                 webView.setBackgroundColor(Color.TRANSPARENT);
                 webView.setInitialScale(100);
                 webView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
@@ -1266,6 +1801,11 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                 settings.setBuiltInZoomControls(true);
                 settings.setSupportZoom(true);
                 settings.setAllowFileAccess(true);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    settings.setAllowFileAccessFromFileURLs(true);
+                    settings.setAllowUniversalAccessFromFileURLs(true);
+                }
+                settings.setDomStorageEnabled(true);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR_MR1) {
                     CompatibilityImpl.setDefaultZoomFAR(settings);
                     CompatibilityImpl.setLoadWithOverviewMode(settings, true);
@@ -1398,7 +1938,10 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
                     }
                     webView.setLayoutParams(MATCH_PARAMS);
                     tag.layout.addView(webView);
-                    if (settings.fallbackWebView() || useFallback(file)) {
+                    if (tag.attachmentModel.type == AttachmentModel.TYPE_VIDEO) {
+                        String videoUrl = file != null ? Uri.fromFile(file).toString() : remote.getAbsoluteUrl(tag.attachmentModel.path);
+                        JSWebView.setVideo(webView, videoUrl, settings.loopMedia());
+                    } else if (settings.fallbackWebView() || useFallback(file)) {
                         prepareWebView(webView);
                         if (file == null) {
                             webView.loadUrl(remote.getAbsoluteUrl(tag.attachmentModel.path));
@@ -1521,6 +2064,10 @@ public class GalleryActivity extends Activity implements View.OnClickListener, V
         public CancellableTask downloadingTask;
         public Timer timer;
         public MediaPlayer audioPlayer;
+        public ExoPlayer exoPlayer;
+        public PlayerControlView exoController;
+        public Handler indicatorHandler;
+        public Runnable indicatorRunnable;
         public AttachmentModel attachmentModel;
         public String attachmentHash;
         public File file;

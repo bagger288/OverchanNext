@@ -22,7 +22,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.support.v4.content.res.ResourcesCompat;
+import androidx.core.content.res.ResourcesCompat;
 import nya.miku.wishmaster.R;
 import nya.miku.wishmaster.api.AbstractVichanModule;
 import nya.miku.wishmaster.api.interfaces.CancellableTask;

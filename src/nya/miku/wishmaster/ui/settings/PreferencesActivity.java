@@ -37,6 +37,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
@@ -65,6 +66,7 @@ public class PreferencesActivity extends PreferenceActivity {
     
     private SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener;
     private SharedPreferences sharedPreferences;
+    private Preference exoplayerControlsPreference;
     
     private static final int[] KEYS_AUTOUPDATE = new int[] {
             R.string.pref_key_enable_autoupdate,
@@ -85,6 +87,11 @@ public class PreferencesActivity extends PreferenceActivity {
         updateListSummary(R.string.pref_key_font_size);
         updateListSummary(R.string.pref_key_download_thumbs);
         updateListSummary(R.string.pref_key_download_format);
+        updateListSummary(R.string.pref_key_gallery_video_player_type);
+        updateListSummary(R.string.pref_key_gallery_exoplayer_controls);
+        
+        exoplayerControlsPreference = getPreferenceManager().findPreference(getString(R.string.pref_key_gallery_exoplayer_controls));
+        updateExoPlayerControlsVisibility();
         
         final Preference clearSubscriptionsPreference = getPreferenceManager().findPreference(getString(R.string.pref_key_clear_subscriptions));
         int subscriptionsCount = (int) MainApplication.getInstance().subscriptions.getCurrentCount();
@@ -154,13 +161,23 @@ public class PreferencesActivity extends PreferenceActivity {
         importPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                if (!CompatibilityUtils.hasAccessStorage(PreferencesActivity.this)) return true;
-                Intent selectFile = new Intent(PreferencesActivity.this, FileDialogActivity.class);
-                selectFile.putExtra(FileDialogActivity.CAN_SELECT_DIR, false);
-                selectFile.putExtra(FileDialogActivity.START_PATH, MainApplication.getInstance().settings.getDownloadDirectory().toString());
-                selectFile.putExtra(FileDialogActivity.SELECTION_MODE, FileDialogActivity.SELECTION_MODE_OPEN);
-                selectFile.putExtra(FileDialogActivity.FORMAT_FILTER, new String[] { "json" });
-                startActivityForResult(selectFile, REQUEST_CODE_SELECT_SETTINGS_FILE);
+                String[] items = new String[] {
+                    getString(R.string.filedialog_browse_system),
+                    getString(R.string.filedialog_title)
+                };
+                new AlertDialog.Builder(PreferencesActivity.this)
+                    .setTitle(R.string.pref_key_settings_import_title)
+                    .setItems(items, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            if (which == 0) {
+                                openSystemSettingsPicker();
+                            } else {
+                                openBuiltinSettingsPicker();
+                            }
+                        }
+                    })
+                    .show();
                 return true;
             }
         });
@@ -286,6 +303,10 @@ public class PreferencesActivity extends PreferenceActivity {
                         updateChansScreen((PreferenceScreen) getPreferenceManager().findPreference(getString(R.string.pref_key_cat_chans)));
                     }
                 }
+                if (getString(R.string.pref_key_gallery_video_player_type).equals(key) ||
+                    getString(R.string.pref_key_gallery_videoplayer).equals(key)) {
+                    updateExoPlayerControlsVisibility();
+                }
             }
         };
         
@@ -350,7 +371,26 @@ public class PreferencesActivity extends PreferenceActivity {
 
     private void updateListSummary(String prefKey) {
         ListPreference preference = (ListPreference) getPreferenceManager().findPreference(prefKey);
-        preference.setSummary(preference.getEntry());
+        if (preference != null) {
+            preference.setSummary(preference.getEntry());
+        }
+    }
+
+    private void updateExoPlayerControlsVisibility() {
+        PreferenceGroup galleryGroup = (PreferenceGroup) getPreferenceManager().findPreference(getString(R.string.pref_key_gallery_screen));
+        if (galleryGroup == null || exoplayerControlsPreference == null) return;
+        boolean isExo = MainApplication.getInstance().settings.useExoPlayer();
+        Preference current = galleryGroup.findPreference(getString(R.string.pref_key_gallery_exoplayer_controls));
+        if (isExo) {
+            if (current == null) {
+                galleryGroup.addPreference(exoplayerControlsPreference);
+                updateListSummary(R.string.pref_key_gallery_exoplayer_controls);
+            }
+        } else {
+            if (current != null) {
+                galleryGroup.removePreference(current);
+            }
+        }
     }
     
     private void updateChansScreen(final PreferenceScreen chansCat) {
@@ -458,15 +498,43 @@ public class PreferencesActivity extends PreferenceActivity {
         }
     }
 
+    private void openSystemSettingsPicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] { "application/json", "text/*", "*/*" });
+        try {
+            startActivityForResult(Intent.createChooser(intent, getString(R.string.pref_key_settings_import_title)), REQUEST_CODE_SELECT_SETTINGS_FILE);
+        } catch (Exception e) {
+            openBuiltinSettingsPicker();
+        }
+    }
+
+    private void openBuiltinSettingsPicker() {
+        if (!CompatibilityUtils.hasAccessStorage(PreferencesActivity.this)) return;
+        Intent selectFile = new Intent(PreferencesActivity.this, FileDialogActivity.class);
+        selectFile.putExtra(FileDialogActivity.CAN_SELECT_DIR, false);
+        selectFile.putExtra(FileDialogActivity.START_PATH, MainApplication.getInstance().settings.getDownloadDirectory().toString());
+        selectFile.putExtra(FileDialogActivity.SELECTION_MODE, FileDialogActivity.SELECTION_MODE_OPEN);
+        selectFile.putExtra(FileDialogActivity.FORMAT_FILTER, new String[] { ".json", "json" });
+        startActivityForResult(selectFile, REQUEST_CODE_SELECT_SETTINGS_FILE);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_SELECT_SETTINGS_FILE) {
+        if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_SELECT_SETTINGS_FILE && data != null) {
             final String path = data.getStringExtra(FileDialogActivity.RESULT_PATH);
+            final Uri uri = data.getData();
+            if (path == null && uri == null) return;
             DialogInterface.OnClickListener onClickYes = new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    SettingsImporter.Import(new File(path), MainApplication.getInstance().settings.getImportOverwrite(), PreferencesActivity.this);
+                    if (uri != null) {
+                        SettingsImporter.Import(uri, MainApplication.getInstance().settings.getImportOverwrite(), PreferencesActivity.this);
+                    } else {
+                        SettingsImporter.Import(new File(path), MainApplication.getInstance().settings.getImportOverwrite(), PreferencesActivity.this);
+                    }
                 }
             };
             if (MainApplication.getInstance().settings.getImportOverwrite()) {
@@ -477,7 +545,11 @@ public class PreferencesActivity extends PreferenceActivity {
                         setNegativeButton(android.R.string.no, null).
                         show();
             } else {
-                SettingsImporter.Import(new File(path), MainApplication.getInstance().settings.getImportOverwrite(), this);
+                if (uri != null) {
+                    SettingsImporter.Import(uri, MainApplication.getInstance().settings.getImportOverwrite(), this);
+                } else {
+                    SettingsImporter.Import(new File(path), MainApplication.getInstance().settings.getImportOverwrite(), this);
+                }
             }
         }
     }
